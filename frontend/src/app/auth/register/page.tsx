@@ -7,16 +7,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('');
+  const { register, isRegistering, registerError } = useAuth();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle registration logic
-    console.log({ email, password, role });
+    register({ email, password, role });
   }
 
   return (
@@ -63,8 +64,8 @@ export default function RegisterPage() {
                     </SelectContent>
                 </Select>
             </div>
-            <Button type="submit" className="w-full">
-              Create an account
+            <Button type="submit" className="w-full" disabled={isRegistering}>
+              {isRegistering ? 'Creating account...' : 'Create an account'}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
