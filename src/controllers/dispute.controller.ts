@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import * as disputeService from '../services/dispute.service';
+import prisma from '../lib/prisma';
+import * as notificationService from '../services/notification.service';
 
 export const createDispute = async (req: Request, res: Response) => {
   try {
@@ -12,7 +14,7 @@ export const createDispute = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Only homeowners can create disputes.' });
     }
 
-    const dispute = await disputeService.createDispute(milestoneId, reason, userId);
+    const dispute = await disputeService.createDispute(milestoneId, reason, userId, prisma, notificationService);
     res.status(201).json(dispute);
   } catch (error: any) {
     if (error.message.includes('Unauthorized')) {
@@ -33,7 +35,7 @@ export const resolveDispute = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Only admins can resolve disputes.' });
     }
 
-    const dispute = await disputeService.resolveDispute(disputeId, resolutionNotes);
+    const dispute = await disputeService.resolveDispute(disputeId, resolutionNotes, prisma);
     res.status(200).json(dispute);
   } catch (error: any) {
     res.status(500).json({ message: 'Error resolving dispute', error: error.message });

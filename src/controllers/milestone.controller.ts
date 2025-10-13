@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as milestoneService from '../services/milestone.service';
 import { MilestoneStatus } from '@prisma/client';
+import prisma from '../lib/prisma';
 
 export const updateMilestoneStatus = async (req: Request, res: Response) => {
   try {
@@ -11,7 +12,7 @@ export const updateMilestoneStatus = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid milestone status' });
     }
 
-    const milestone = await milestoneService.updateMilestoneStatus(id, status);
+    const milestone = await milestoneService.updateMilestoneStatus(id, status, prisma);
     res.status(200).json(milestone);
   } catch (error) {
     res.status(500).json({ message: 'Error updating milestone status' });
@@ -28,7 +29,7 @@ export const submitMilestone = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Only contractors can submit milestones.' });
     }
 
-    const milestone = await milestoneService.submitMilestone(id, userId);
+    const milestone = await milestoneService.submitMilestone(id, userId, prisma);
     res.status(200).json(milestone);
   } catch (error: any) {
      if (error.message.includes('Unauthorized')) {

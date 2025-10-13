@@ -1,15 +1,14 @@
 import { PrismaClient, MilestoneStatus } from '@prisma/client';
+import prismaClient from '../lib/prisma';
 
-const prisma = new PrismaClient();
-
-export const updateMilestoneStatus = async (milestoneId: string, status: MilestoneStatus) => {
+export const updateMilestoneStatus = async (milestoneId: string, status: MilestoneStatus, prisma: PrismaClient = prismaClient) => {
   return prisma.milestone.update({
     where: { id: milestoneId },
     data: { status },
   });
 };
 
-export const submitMilestone = async (milestoneId: string, contractorUserId: string) => {
+export const submitMilestone = async (milestoneId: string, contractorUserId: string, prisma: PrismaClient = prismaClient) => {
   const milestone = await prisma.milestone.findUnique({
     where: { id: milestoneId },
     include: { job: { include: { contractor: true } } },
@@ -20,10 +19,7 @@ export const submitMilestone = async (milestoneId: string, contractorUserId: str
   }
 
   const now = new Date();
-  // As per Stage1.md, 3 days for mid, 5 for final.
-  // This logic assumes we can tell if it's a final milestone.
-  // For now, let's just use 3 days for all.
-  const reviewDeadline = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days from now
+  const reviewDeadline = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days
 
   return prisma.milestone.update({
     where: { id: milestoneId },

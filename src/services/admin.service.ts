@@ -1,8 +1,7 @@
 import { PrismaClient } from '@prisma/client';
+import prismaClient from '../lib/prisma';
 
-const prisma = new PrismaClient();
-
-export const getAllUsers = () => {
+export const getAllUsers = (prisma: PrismaClient = prismaClient) => {
   return prisma.user.findMany({
     include: {
       homeowner: true,
@@ -11,7 +10,7 @@ export const getAllUsers = () => {
   });
 };
 
-export const getAllJobs = () => {
+export const getAllJobs = (prisma: PrismaClient = prismaClient) => {
   return prisma.job.findMany({
     include: {
       homeowner: { include: { user: true } },
@@ -21,7 +20,7 @@ export const getAllJobs = () => {
   });
 };
 
-export const getAllDisputes = () => {
+export const getAllDisputes = (prisma: PrismaClient = prismaClient) => {
   return prisma.dispute.findMany({
     include: {
       milestone: {

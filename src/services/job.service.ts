@@ -1,13 +1,17 @@
 import { PrismaClient, JobStatus } from '@prisma/client';
 import * as escrowService from './escrow.service';
 import * as notificationService from './notification.service';
+import prismaClient from '../lib/prisma';
 
-const prisma = new PrismaClient();
-
-export const createJob = async (data: any, contractorId: string) => {
+export const createJob = async (
+  data: any, 
+  contractorId: string,
+  prisma: PrismaClient = prismaClient,
+  escrow: typeof escrowService = escrowService,
+  notifications: typeof notificationService = notificationService
+) => {
   const { title, description, totalPrice, homeownerId, milestones } = data;
 
-  // Basic validation
   if (milestones.length === 0 || milestones.length > 3) {
     throw new Error('A job must have between 1 and 3 milestones.');
   }
@@ -17,7 +21,6 @@ export const createJob = async (data: any, contractorId: string) => {
     throw new Error('The sum of milestone prices must equal the total job price.');
   }
 
-  // Create the job in our database first
   const job = await prisma.job.create({
     data: {
       title,
@@ -41,21 +44,18 @@ export const createJob = async (data: any, contractorId: string) => {
     },
   });
 
-  // Send notifications
   const homeownerUser = job.homeowner.user;
   const contractorUser = job.contractor.user;
   const emailSubject = `New Job Created: ${job.title}`;
   const emailText = `Hello ${homeownerUser.email},\n\nContractor ${contractorUser.email} has created a new job for you: "${job.title}". Please log in to Conforma to review and fund the project.\n\nTotal Price: $${job.totalPrice}`;
-  notificationService.sendEmail(homeownerUser.email, emailSubject, emailText, `<p>${emailText.replace(/\n/g, '<br>')}</p>`);
+  notifications.sendEmail(homeownerUser.email, emailSubject, emailText, `<p>${emailText.replace(/\n/g, '<br>')}</p>`);
 
   if (job.homeowner.phoneNumber) {
     const smsText = `Conforma: A new job "${job.title}" has been created for you. Please log in to review and fund the project.`;
-    notificationService.sendSms(job.homeowner.phoneNumber, smsText);
+    notifications.sendSms(job.homeowner.phoneNumber, smsText);
   }
 
-
-  // Now create the transaction on Escrow.com
-  const escrowTransaction = await escrowService.createTransaction({
+  const escrowTransaction = await escrow.createTransaction({
     title,
     description,
     totalPrice,
@@ -63,7 +63,6 @@ export const createJob = async (data: any, contractorId: string) => {
     contractor: job.contractor.user,
   });
 
-  // Update our job with the Escrow.com transaction ID
   const updatedJob = await prisma.job.update({
     where: { id: job.id },
     data: { escrowTransactionId: escrowTransaction.id },
@@ -75,7 +74,7 @@ export const createJob = async (data: any, contractorId: string) => {
   return updatedJob;
 };
 
-export const getJobsByUser = async (userId: string, role: string) => {
+export const getJobsByUser = async (userId: string, role: string, prisma: PrismaClient = prismaClient) => {
   const query = role === 'CONTRACTOR' ? { contractor: { userId } } : { homeowner: { userId } };
   return prisma.job.findMany({
     where: query,
@@ -87,7 +86,7 @@ export const getJobsByUser = async (userId: string, role: string) => {
   });
 };
 
-export const getJobById = async (jobId: string) => {
+export const getJobById = async (jobId: string, prisma: PrismaClient = prismaClient) => {
   return prisma.job.findUnique({
     where: { id: jobId },
     include: {

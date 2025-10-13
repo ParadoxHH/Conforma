@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run"
   },
   "prisma": {
     "schema": "src/prisma/schema.prisma",
@@ -20,14 +20,20 @@
   "dependencies": {
     "@prisma/client": "^6.17.1",
     "@sendgrid/mail": "^8.1.6",
+    "@types/cors": "^2.8.19",
     "@types/node-cron": "^3.0.11",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "argon2": "^0.44.0",
     "axios": "^1.12.2",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "node-cron": "^4.2.1",
     "pg": "^8.16.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "twilio": "^5.10.2"
   },
   "devDependencies": {
@@ -35,9 +41,12 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.7.1",
     "@types/pg": "^8.15.5",
+    "@vitest/coverage-v8": "^3.2.4",
     "nodemon": "^3.1.10",
     "prisma": "^6.17.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4",
+    "vitest-mock-extended": "^3.1.0"
   }
 }

@@ -1,10 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 import * as notificationService from './notification.service';
+import prismaClient from '../lib/prisma';
 
-const prisma = new PrismaClient();
-
-export const createDispute = async (milestoneId: string, reason: string, userId: string) => {
-  // Verify the user is the homeowner for this job
+export const createDispute = async (
+  milestoneId: string, 
+  reason: string, 
+  userId: string,
+  prisma: PrismaClient = prismaClient,
+  notifications: typeof notificationService = notificationService
+) => {
   const milestone = await prisma.milestone.findUnique({
     where: { id: milestoneId },
     include: {
@@ -21,7 +25,6 @@ export const createDispute = async (milestoneId: string, reason: string, userId:
     throw new Error('Unauthorized or milestone not found.');
   }
 
-  // Create the dispute and update milestone status
   const dispute = await prisma.dispute.create({
     data: {
       milestoneId,
@@ -40,24 +43,18 @@ export const createDispute = async (milestoneId: string, reason: string, userId:
     data: { status: 'DISPUTED' },
   });
 
-  // Send notifications
   const contractorEmail = milestone.job.contractor.user.email;
-  const adminEmail = 'admin@conforma.com'; // In a real app, this would be fetched from the DB
+  const adminEmail = 'admin@conforma.com';
   const subject = `Dispute Opened for Job: ${milestone.job.title}`;
   const text = `A dispute has been opened by ${milestone.job.homeowner.user.email} for milestone "${milestone.title}".\n\nReason: ${reason}\n\nPlease log in to Conforma to review the details.`;
   
-  notificationService.sendEmail(contractorEmail, subject, text, `<p>${text.replace(/\n/g, '<br>')}</p>`);
-  notificationService.sendEmail(adminEmail, subject, text, `<p>${text.replace(/\n/g, '<br>')}</p>`);
-
+  notifications.sendEmail(contractorEmail, subject, text, `<p>${text.replace(/\n/g, '<br>')}</p>`);
+  notifications.sendEmail(adminEmail, subject, text, `<p>${text.replace(/\n/g, '<br>')}</p>`);
 
   return dispute;
 };
 
-export const resolveDispute = async (disputeId: string, resolutionNotes: string) => {
-  // In a real app, this would involve more complex logic,
-  // like partial payments, refunds, etc.
-  // For now, we'll just mark it as resolved.
-
+export const resolveDispute = async (disputeId: string, resolutionNotes: string, prisma: PrismaClient = prismaClient) => {
   const dispute = await prisma.dispute.update({
     where: { id: disputeId },
     data: {
@@ -68,9 +65,6 @@ export const resolveDispute = async (disputeId: string, resolutionNotes: string)
       milestone: true,
     },
   });
-
-  // Potentially update the milestone and job status back to IN_PROGRESS
-  // depending on the resolution. Leaving as DISPUTED for now.
 
   return dispute;
 };
