@@ -42,6 +42,7 @@ model Homeowner {
   city            String
   state           String   @default("TX")
   zip             String
+  phoneNumber     String?
   jobs            Job[]
 }
 
