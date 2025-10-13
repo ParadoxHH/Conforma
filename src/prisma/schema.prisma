@@ -11,40 +11,120 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password       String
-  role           Role      @default(HOMEOWNER)
-  homeownerJobs  Job[]     @relation("HomeownerJobs")
-  contractorJobs Job[]     @relation("ContractorJobs")
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id              String          @id @default(cuid())
+  email           String          @unique
+  password        String
+  role            Role            @default(HOMEOWNER)
+  contractor      Contractor?
+  homeowner       Homeowner?
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+  uploadedFiles   EvidenceFile[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Contractor {
+  id              String   @id @default(cuid())
+  user            User     @relation(fields: [userId], references: [id])
+  userId          String   @unique
+  companyName     String?
+  trade           String?
+  payoutAccount   String?
+  jobs            Job[]
+}
+
+model Homeowner {
+  id              String   @id @default(cuid())
+  user            User     @relation(fields: [userId], references: [id])
+  userId          String   @unique
+  address         String
+  city            String
+  state           String   @default("TX")
+  zip             String
+  jobs            Job[]
 }
 
 model Job {
-  id          String      @id @default(cuid())
-  homeowner   User        @relation("HomeownerJobs", fields: [homeownerId], references: [id])
-  homeownerId String
-  contractor  User        @relation("ContractorJobs", fields: [contractorId], references: [id])
-  contractorId String
-  title       String
-  description String
-  status      JobStatus   @default(PENDING)
-  milestones  Milestone[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id                  String      @id @default(cuid())
+  homeowner           Homeowner   @relation(fields: [homeownerId], references: [id])
+  homeownerId         String
+  contractor          Contractor  @relation(fields: [contractorId], references: [id])
+  contractorId        String
+  title               String
+  description         String
+  totalPrice          Float
+  status              JobStatus   @default(PENDING)
+  escrowTransactionId String?
+  milestones          Milestone[]
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
 }
 
 model Milestone {
-  id          String          @id @default(cuid())
-  job         Job             @relation(fields: [jobId], references: [id])
-  jobId       String
-  title       String
-  description String
-  amount      Float
-  status      MilestoneStatus @default(PENDING)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id               String          @id @default(cuid())
+  job              Job             @relation(fields: [jobId], references: [id])
+  jobId            String
+  title            String
+  price            Float
+  status           MilestoneStatus @default(PENDING)
+  submittedAt      DateTime?
+  approvedAt       DateTime?
+  reviewDeadlineAt DateTime?
+  evidence         EvidenceFile[]
+  dispute          Dispute?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model EvidenceFile {
+  id           String    @id @default(cuid())
+  milestone    Milestone @relation(fields: [milestoneId], references: [id])
+  milestoneId  String
+  uploader     User      @relation(fields: [uploaderUserId], references: [id])
+  uploaderUserId String
+  url          String
+  type         String
+  createdAt    DateTime  @default(now())
+}
+
+model Dispute {
+  id              String   @id @default(cuid())
+  milestone       Milestone @relation(fields: [milestoneId], references: [id])
+  milestoneId     String   @unique
+  reasonText      String
+  status          String
+  resolutionNotes String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  type      String
+  payload   Json
+  sentAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actor      User     @relation(fields: [actorUserId], references: [id])
+  actorUserId String
+  entity     String
+  entityId   String
+  action     String
+  metadata   Json
+  createdAt  DateTime @default(now())
+}
+
+model WebhookEvent {
+  id         String   @id @default(cuid())
+  source     String
+  payload    Json
+  processed  Boolean  @default(false)
+  createdAt  DateTime @default(now())
 }
 
 enum Role {
@@ -58,6 +138,7 @@ enum JobStatus {
   IN_PROGRESS
   COMPLETED
   DISPUTED
+  FUNDING_REQUIRED
 }
 
 enum MilestoneStatus {
