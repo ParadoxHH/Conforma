@@ -1,4 +1,5 @@
 import { PrismaClient, JobStatus } from '@prisma/client';
+import * as escrowService from './escrow.service';
 
 const prisma = new PrismaClient();
 
@@ -15,6 +16,7 @@ export const createJob = async (data: any, contractorId: string) => {
     throw new Error('The sum of milestone prices must equal the total job price.');
   }
 
+  // Create the job in our database first
   const job = await prisma.job.create({
     data: {
       title,
@@ -22,7 +24,7 @@ export const createJob = async (data: any, contractorId: string) => {
       totalPrice,
       contractorId,
       homeownerId,
-      status: JobStatus.PENDING,
+      status: JobStatus.FUNDING_REQUIRED, // Changed status
       milestones: {
         create: milestones.map((m: any) => ({
           title: m.title,
@@ -33,10 +35,30 @@ export const createJob = async (data: any, contractorId: string) => {
     },
     include: {
       milestones: true,
+      homeowner: { include: { user: true } },
+      contractor: { include: { user: true } },
     },
   });
 
-  return job;
+  // Now create the transaction on Escrow.com
+  const escrowTransaction = await escrowService.createTransaction({
+    title,
+    description,
+    totalPrice,
+    homeowner: job.homeowner.user,
+    contractor: job.contractor.user,
+  });
+
+  // Update our job with the Escrow.com transaction ID
+  const updatedJob = await prisma.job.update({
+    where: { id: job.id },
+    data: { escrowTransactionId: escrowTransaction.id },
+    include: {
+      milestones: true,
+    },
+  });
+
+  return updatedJob;
 };
 
 export const getJobsByUser = async (userId: string, role: string) => {
