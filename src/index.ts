@@ -5,6 +5,8 @@ import jobRoutes from './routes/job.routes';
 import milestoneRoutes from './routes/milestone.routes';
 import webhookRoutes from './routes/webhook.routes';
 import disputeRoutes from './routes/dispute.routes';
+import adminRoutes from './routes/admin.routes';
+import { startMilestoneApprover } from './jobs/milestone-approver';
 
 dotenv.config();
 
@@ -18,6 +20,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/milestones', milestoneRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/disputes', disputeRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/', (req, res) => {
   res.send('Conforma API is running!');
@@ -25,4 +28,6 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+  // Start the background job
+  startMilestoneApprover();
 });

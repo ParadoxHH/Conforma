@@ -7,5 +7,6 @@ const router = Router();
 router.use(protect);
 
 router.patch('/:id/status', milestoneController.updateMilestoneStatus);
+router.patch('/:id/submit', milestoneController.submitMilestone);
 
 export default router;
