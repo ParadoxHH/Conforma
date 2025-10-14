@@ -31,8 +31,14 @@ export function HowItWorksStepper({ activeStep }: { activeStep: MotionValue<numb
           {steps.map((step, index) => (
             <div key={index} className="flex flex-col items-center z-10">
               <motion.div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white"
-                animate={{ backgroundColor: index <= currentStep ? "var(--primary)" : "#cbd5e1" }}
+                className="w-9 h-9 rounded-full flex items-center justify-center font-semibold"
+                animate={{
+                  backgroundColor:
+                    index <= currentStep ? "hsl(var(--primary))" : "#e2e8f0",
+                  color:
+                    index <= currentStep ? "hsl(var(--primary-foreground))" : "#1e293b",
+                }}
+                transition={{ duration: 0.2 }}
               >
                 {index + 1}
               </motion.div>

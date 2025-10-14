@@ -18,7 +18,10 @@ function Hero() {
           Funds are held safely in escrow. Contractors get paid only when you approve each milestone.
         </p>
         <div className="mt-8">
-          <Link href="/register" className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-sm font-medium text-white shadow transition-colors hover:bg-primary/90">
+          <Link
+            href="/register"
+            className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+          >
             Get Started
           </Link>
         </div>

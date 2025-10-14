@@ -23,7 +23,8 @@ export function TrustBadgeRow() {
         {badges.map((badge) => (
           <Tooltip key={badge.text}>
             <TooltipTrigger asChild>
-              <span className="text-sm font-medium text-slate-600 cursor-default">
+              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-1.5 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur cursor-default">
+                <span className="h-2 w-2 rounded-full bg-primary/70" />
                 {badge.text}
               </span>
             </TooltipTrigger>

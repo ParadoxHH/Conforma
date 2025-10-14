@@ -57,16 +57,16 @@ export function TestimonialCarousel() {
           </motion.div>
         </AnimatePresence>
       </div>
-      <div className="flex justify-center mt-4">
+      <div className="flex justify-center mt-6 gap-3">
         <button 
           onClick={() => setIndex((prevIndex) => (prevIndex - 1 + testimonials.length) % testimonials.length)}
-          className="px-4 py-2 rounded-md bg-slate-200 mr-4"
+          className="inline-flex items-center justify-center rounded-full bg-secondary px-5 py-2 text-sm font-semibold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-secondary-foreground/40"
         >
           Prev
         </button>
         <button 
           onClick={() => setIndex((prevIndex) => (prevIndex + 1) % testimonials.length)}
-          className="px-4 py-2 rounded-md bg-primary text-white"
+          className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-md transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
         >
           Next
         </button>
