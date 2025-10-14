@@ -1,3 +1,13 @@
+const plugin = require("tailwindcss/plugin");
+
+let animatePlugin = plugin(() => {});
+try {
+  // Prefer the official tailwindcss-animate utilities when available
+  animatePlugin = require("tailwindcss-animate");
+} catch (error) {
+  // Fallback to a no-op so missing dependency does not break production builds
+}
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
@@ -32,5 +42,5 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animatePlugin],
 }
