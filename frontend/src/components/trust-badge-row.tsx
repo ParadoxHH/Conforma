@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -16,24 +17,30 @@ const badges = [
   },
 ];
 
-export function TrustBadgeRow() {
+type TrustBadgeRowProps = {
+  className?: string;
+};
+
+export function TrustBadgeRow({ className }: TrustBadgeRowProps) {
   return (
-    <div className="flex justify-center items-center space-x-4 py-4">
-      <TooltipProvider>
-        {badges.map((badge) => (
-          <Tooltip key={badge.text}>
-            <TooltipTrigger asChild>
-              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-1.5 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur cursor-default">
-                <span className="h-2 w-2 rounded-full bg-primary/70" />
-                {badge.text}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{badge.tooltip}</p>
-            </TooltipContent>
-          </Tooltip>
-        ))}
-      </TooltipProvider>
+    <div className={cn("flex w-full justify-center", className)}>
+      <div className="flex w-full max-w-3xl flex-wrap items-center justify-center gap-3 rounded-2xl border border-white/60 bg-white/80 px-4 py-4 text-sm font-semibold text-slate-600 shadow-sm shadow-slate-900/5 backdrop-blur">
+        <TooltipProvider>
+          {badges.map((badge) => (
+            <Tooltip key={badge.text}>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center gap-2 rounded-full bg-slate-100/60 px-4 py-1.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 transition hover:-translate-y-0.5 hover:bg-white hover:text-slate-800">
+                  <span className="h-2 w-2 rounded-full bg-primary/70" />
+                  {badge.text}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="text-slate-600">
+                <p>{badge.tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </TooltipProvider>
+      </div>
     </div>
   );
 }

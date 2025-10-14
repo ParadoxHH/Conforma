@@ -25,7 +25,7 @@ export function TestimonialCarousel() {
 
   return (
     <motion.div 
-      className="w-full max-w-2xl mx-auto text-center"
+      className="w-full max-w-3xl mx-auto rounded-3xl border border-slate-200/70 bg-white/85 p-10 text-center shadow-lg shadow-slate-900/10 backdrop-blur"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       initial={{ opacity: 0, y: 50 }}
@@ -52,8 +52,8 @@ export function TestimonialCarousel() {
               }
             }}
           >
-            <p className="italic">"{testimonials[index].quote}"</p>
-            <p className="mt-4 font-bold">{testimonials[index].author}</p>
+            <p className="text-lg font-medium italic text-slate-700">"{testimonials[index].quote}"</p>
+            <p className="mt-6 text-sm font-semibold uppercase tracking-[0.12em] text-slate-500">{testimonials[index].author}</p>
           </motion.div>
         </AnimatePresence>
       </div>

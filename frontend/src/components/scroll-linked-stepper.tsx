@@ -12,8 +12,10 @@ export function ScrollLinkedStepper() {
 
   return (
     <div ref={targetRef} className="relative h-[300vh]">
-      <div className="sticky top-0 h-screen flex items-center justify-center">
-        <HowItWorksStepper activeStep={activeStep} />
+      <div className="sticky top-0 flex h-screen items-center justify-center px-4">
+        <div className="w-full max-w-4xl rounded-3xl border border-slate-200/70 bg-white/85 p-8 shadow-xl shadow-slate-900/10 backdrop-blur">
+          <HowItWorksStepper activeStep={activeStep} />
+        </div>
       </div>
     </div>
   );
