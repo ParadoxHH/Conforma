@@ -1,17 +1,22 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
-import Providers from "@/components/providers";
-import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "@/components/theme-provider";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 
-const inter = Inter({ subsets: ["latin"] });
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
-  title: "Conforma - Secure Escrow for Texas Home Services",
-  description: "Homeowners fund projects securely; contractors get paid only when milestones are approved.",
+  title: "Conforma - Secure Escrow for Texas Home Projects",
+  description: "Pay-When-Done for Texas Home Projects. Funds are held safely in escrow. Contractors get paid only when you approve each milestone.",
 };
 
 export default function RootLayout({
@@ -21,20 +26,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Providers>
-            <Header />
-            <main>{children}</main>
-            <Footer />
-            <Toaster />
-          </Providers>
-        </ThemeProvider>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <Header />
+        {children}
+        <Footer />
       </body>
     </html>
   );

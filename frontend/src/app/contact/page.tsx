@@ -1,43 +1,24 @@
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { LeadForm } from "@/components/lead-form";
 
-export default function ContactPage() {
+export default function Contact() {
   return (
-    <div className="container mx-auto py-12 px-4 md:px-6">
-      <div className="space-y-4 pt-20 max-w-xl mx-auto">
-        <h1 className="text-4xl font-bold text-center">Contact Us</h1>
-        <p className="text-lg text-gray-600 text-center">
-          Have a question or need support? Fill out the form below.
-        </p>
-        <form className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" placeholder="Enter your name" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="Enter your email" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subject">Subject</Label>
-            <Input id="subject" placeholder="Enter the subject" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="message">Message</Label>
-            <textarea
-              id="message"
-              className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-              placeholder="Enter your message"
-            />
-          </div>
-          <Button type="submit" className="w-full">
-            Send Message
-          </Button>
-        </form>
-      </div>
+    <div className="container mx-auto py-12">
+      <section className="text-center mb-16">
+        <h1 className="text-4xl font-bold">Contact Us</h1>
+        <p className="text-lg text-slate-600 mt-4">We're here to help. Fill out the form below and we'll get back to you as soon as possible.</p>
+      </section>
+
+      <section className="mb-16">
+        <LeadForm />
+      </section>
+
+      <section className="text-center">
+        <h2 className="text-3xl font-bold">Other Ways to Reach Us</h2>
+        <div className="mt-8 space-y-4">
+          <p>Email: <a href="mailto:support@conforma.com" className="text-primary hover:underline">support@conforma.com</a></p>
+          <p>Phone: (512) 555-1234</p>
+        </div>
+      </section>
     </div>
   );
 }
