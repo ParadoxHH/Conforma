@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+﻿import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { Trade } from '@prisma/client';
 
 import * as searchService from '../src/services/search.service';

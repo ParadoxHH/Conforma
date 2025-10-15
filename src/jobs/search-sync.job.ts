@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+﻿import cron from 'node-cron';
 import { logger } from '../utils/logger';
 import { getContractorsForIndex } from '../services/search.service';
 

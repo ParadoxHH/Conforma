@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -158,7 +158,7 @@ export default function ReviewsPage() {
                     {errors.comment ? <p className="text-xs text-destructive">{errors.comment.message}</p> : null}
                   </div>
                   <Button type="submit" disabled={isSubmitting || reviewMutation.isPending}>
-                    {reviewMutation.isPending ? 'Submitting…' : 'Submit review'}
+                    {reviewMutation.isPending ? 'Submittingâ€¦' : 'Submit review'}
                   </Button>
                   {reviewMutation.isSuccess ? (
                     <p className="text-xs text-success">Thank you! Your review has been submitted.</p>

@@ -1,4 +1,4 @@
-'use client';
+ï»¿'use client';
 
 import { useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -96,7 +96,7 @@ export default function ProfilePage() {
             bio: values.bio || null,
             companyName: values.companyName || null,
             serviceAreas: values.serviceAreas
-              ? values.serviceAreas.split(',').map((zip: string) => zip.trim()).filter(Boolean)
+              ? values.serviceAreas.split().map((zip: string) => zip.trim()).filter(Boolean)
               : [],
           };
           await mutation.mutateAsync(payload);
@@ -114,7 +114,7 @@ export default function ProfilePage() {
   );
 
   if (isLoading || !data) {
-    return <p>Loading profile…</p>;
+    return <p>Loading profile...</p>;
   }
 
   return (
@@ -162,13 +162,13 @@ export default function ProfilePage() {
                 onChange={(event) => setValue('allowAlias', event.target.checked)}
               />
               <Label htmlFor="allowAlias" className="text-sm text-slate-600">
-                Show my reviews as “Verified Homeowner”
+                Show my reviews as "Verified Homeowner"
               </Label>
             </div>
           </>
         )}
         <Button type="submit" disabled={isSubmitting || mutation.isPending}>
-          {mutation.isPending ? 'Saving…' : 'Save profile'}
+          {mutation.isPending ? 'Saving...' : 'Save profile'}
         </Button>
         {mutation.isSuccess ? <p className="text-xs text-success">Profile updated.</p> : null}
         {mutation.isError ? (

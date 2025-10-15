@@ -1,4 +1,4 @@
-import { PrismaClient, Role, Trade } from '@prisma/client';
+﻿import { PrismaClient, Role, Trade } from '@prisma/client';
 import prismaClient from '../lib/prisma';
 
 type UpdateContractorPayload = {

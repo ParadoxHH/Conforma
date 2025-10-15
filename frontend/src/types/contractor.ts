@@ -1,4 +1,4 @@
-export type ContractorSummary = {
+﻿export type ContractorSummary = {
   id: string;
   companyName: string | null;
   trades: string[];

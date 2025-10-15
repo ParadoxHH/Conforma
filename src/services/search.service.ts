@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, Trade } from '@prisma/client';
+﻿import { Prisma, PrismaClient, Trade } from '@prisma/client';
 import prismaClient from '../lib/prisma';
 import { calculateDistanceMiles, getZipsWithinRadius, isKnownZip } from '../utils/geo';
 

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -155,7 +155,7 @@ function AcceptContractorInvite({
         {errors.trades ? <p className="text-xs text-destructive">{errors.trades.message}</p> : null}
       </div>
       <Button type="submit" disabled={isSubmitting || mutation.isPending}>
-        {mutation.isPending ? 'Creating account…' : 'Accept invitation'}
+        {mutation.isPending ? 'Creating accountâ€¦' : 'Accept invitation'}
       </Button>
       {mutation.isSuccess ? (
         <p className="text-xs text-success">Invitation accepted. You can now sign in to Conforma.</p>
@@ -253,7 +253,7 @@ function AcceptHomeownerInvite({
         {errors.zip ? <p className="text-xs text-destructive">{errors.zip.message}</p> : null}
       </div>
       <Button type="submit" disabled={isSubmitting || mutation.isPending}>
-        {mutation.isPending ? 'Creating account…' : 'Accept invitation'}
+        {mutation.isPending ? 'Creating accountâ€¦' : 'Accept invitation'}
       </Button>
       {mutation.isSuccess ? (
         <p className="text-xs text-success">Invitation accepted. You can now sign in to Conforma.</p>
@@ -277,7 +277,7 @@ export default function AcceptInvitePage({ params }: { params: { token: string }
   const [accepted, setAccepted] = useState(false);
 
   if (isLoading) {
-    return <div className="container px-4 py-16">Loading invitation…</div>;
+    return <div className="container px-4 py-16">Loading invitationâ€¦</div>;
   }
 
   if (isError || !data) {

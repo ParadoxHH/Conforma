@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+﻿import { Suspense } from 'react';
 
 import { ContractorSearchView } from './search-view';
 
@@ -46,7 +46,7 @@ export default function ContractorsPage({
   };
 
   return (
-    <Suspense fallback={<div className="container px-4 py-16">Loading contractor search…</div>}>
+    <Suspense fallback={<div className="container px-4 py-16">Loading contractor searchâ€¦</div>}>
       <ContractorSearchView initialFilters={initialFilters} />
     </Suspense>
   );

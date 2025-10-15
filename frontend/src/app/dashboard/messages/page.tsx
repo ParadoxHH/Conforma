@@ -1,4 +1,4 @@
-'use client';
+ï»¿'use client';
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -27,7 +27,7 @@ export default function MessagesIndexPage() {
       </p>
       <div className="mt-6 space-y-3">
         {isLoading ? (
-          <p className="text-sm text-slate-600">Loading jobs…</p>
+          <p className="text-sm text-slate-600">Loading jobs...</p>
         ) : data && data.length > 0 ? (
           data.map((job) => (
             <Link

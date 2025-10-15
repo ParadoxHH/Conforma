@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+ï»¿import { Suspense } from 'react';
 
 import { ContractorProfileView } from './profile-view';
 
@@ -8,7 +8,7 @@ type ContractorProfilePageProps = {
 
 export default function ContractorProfilePage({ params }: ContractorProfilePageProps) {
   return (
-    <Suspense fallback={<div className=\"container px-4 py-16\">Loading contractor…</div>}>
+    <Suspense fallback={<div className="container px-4 py-16">Loading contractor...</div>}>
       <ContractorProfileView contractorId={params.id} />
     </Suspense>
   );

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import * as adminController from '../controllers/admin.controller';
 import * as documentController from '../controllers/document.controller';
 import { protect } from '../middleware/auth.middleware';

@@ -1,4 +1,4 @@
--- CreateEnum
+﻿-- CreateEnum
 CREATE TYPE "Trade" AS ENUM ('ROOFING', 'MOVING', 'SOLAR', 'TREE_TRIMMING', 'HOME_IMPROVEMENT', 'OTHER');
 
 -- CreateEnum

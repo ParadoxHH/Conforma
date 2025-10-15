@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
@@ -165,7 +165,7 @@ export function ContractorFiltersPanel({ defaultValues, onSubmit, isLoading, cla
 
         <div className="flex items-center gap-3">
           <Button type="submit" className="flex-1" disabled={isLoading}>
-            {isLoading ? 'Searching…' : 'Apply filters'}
+            {isLoading ? 'Searchingâ€¦' : 'Apply filters'}
           </Button>
           <Button
             type="button"

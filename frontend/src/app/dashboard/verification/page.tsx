@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -101,7 +101,7 @@ export default function VerificationPage() {
             </Select>
           </div>
           <Button type="button" onClick={() => uploadLinkMutation.mutate()} disabled={uploadLinkMutation.isPending}>
-            {uploadLinkMutation.isPending ? 'Requesting…' : 'Generate upload URL'}
+            {uploadLinkMutation.isPending ? 'Requestingâ€¦' : 'Generate upload URL'}
           </Button>
         </div>
         {uploadHint ? (
@@ -126,7 +126,7 @@ export default function VerificationPage() {
           disabled={submitDocumentMutation.isPending || !fileUrl}
           onClick={() => submitDocumentMutation.mutate()}
         >
-          {submitDocumentMutation.isPending ? 'Submitting…' : 'Submit for review'}
+          {submitDocumentMutation.isPending ? 'Submittingâ€¦' : 'Submit for review'}
         </Button>
         {submitDocumentMutation.isSuccess ? (
           <p className="mt-2 text-xs text-success">Document submitted. We will notify you once reviewed.</p>

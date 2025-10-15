@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -103,7 +103,7 @@ function InviteContractorPanel({ contractorId, onSuccess }: InvitePanelProps) {
           <Input id="invite-job" placeholder="Existing job ID" {...register('jobId')} />
         </div>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Sending…' : 'Send invite'}
+          {isSubmitting ? 'Sendingâ€¦' : 'Send invite'}
         </Button>
         {isSubmitSuccessful ? (
           <p className="text-xs text-success">
@@ -138,7 +138,7 @@ export function ContractorProfileView({ contractorId }: ContractorProfileViewPro
   });
 
   if (isLoading || !profile) {
-    return <div className="container px-4 py-16">Loading contractor…</div>;
+    return <div className="container px-4 py-16">Loading contractorâ€¦</div>;
   }
 
   const totalReviewPages = reviews ? Math.ceil(reviews.total / reviews.pageSize) : 1;
@@ -173,7 +173,7 @@ export function ContractorProfileView({ contractorId }: ContractorProfileViewPro
             <div className="text-right">
               <p className="text-sm font-semibold text-slate-500">Average rating</p>
               <p className="text-3xl font-semibold text-slate-900">
-                {profile.ratingCount > 0 ? profile.ratingAvg.toFixed(1) : '—'}
+                {profile.ratingCount > 0 ? profile.ratingAvg.toFixed(1) : '--'}
               </p>
               <p className="text-xs text-slate-500">
                 {profile.ratingCount > 0 ? `${profile.ratingCount} homeowner reviews` : 'Awaiting first review'}
@@ -218,7 +218,7 @@ export function ContractorProfileView({ contractorId }: ContractorProfileViewPro
                     >
                       <p className="font-semibold text-slate-900">{item.title}</p>
                       <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">{item.type}</p>
-                      <p className="mt-2 text-xs text-primary">View project ↗</p>
+                      <p className="mt-2 text-xs text-primary">View project â†--</p>
                     </Link>
                   ))}
                 </div>
@@ -228,7 +228,7 @@ export function ContractorProfileView({ contractorId }: ContractorProfileViewPro
             <div>
               <h2 className="text-xl font-semibold text-slate-900">Homeowner reviews</h2>
               {reviewsLoading && !reviews ? (
-                <p className="mt-3 text-sm text-slate-600">Loading reviews…</p>
+                <p className="mt-3 text-sm text-slate-600">Loading reviewsâ€¦</p>
               ) : null}
               {reviews && reviews.reviews.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-600">No reviews yet. Invite this contractor to your project to be first.</p>

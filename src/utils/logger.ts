@@ -1,4 +1,4 @@
-type LogArgs = [message?: unknown, ...optionalParams: unknown[]];
+﻿type LogArgs = [message?: unknown, ...optionalParams: unknown[]];
 
 const formatMessage = (level: string, args: LogArgs) => {
   const timestamp = new Date().toISOString();

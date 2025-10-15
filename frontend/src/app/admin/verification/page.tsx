@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -90,7 +90,7 @@ export default function AdminVerificationPage() {
                 <div>
                   <p className="text-sm font-semibold text-slate-900">{doc.type}</p>
                   <p className="text-xs text-slate-500">
-                    {doc.user.email} • {doc.user.contractor?.companyName ?? 'Contractor'}
+                    {doc.user.email} â€¢ {doc.user.contractor?.companyName ?? 'Contractor'}
                   </p>
                 </div>
                 <span
@@ -104,7 +104,7 @@ export default function AdminVerificationPage() {
                 </span>
               </div>
               <a href={doc.url} className="mt-3 block text-sm text-primary" target="_blank" rel="noreferrer">
-                View document ↗
+                View document â†—
               </a>
               {doc.notes ? <p className="mt-2 text-xs text-slate-500">Notes: {doc.notes}</p> : null}
 

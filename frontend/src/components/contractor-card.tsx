@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 
 import { ContractorSummary } from '@/types/contractor';
 import { BadgeRow } from '@/components/badge-row';
@@ -20,7 +20,7 @@ type ContractorCardProps = {
 };
 
 export function ContractorCard({ contractor, onInvite, className }: ContractorCardProps) {
-  const rating = contractor.ratingCount > 0 ? contractor.ratingAvg.toFixed(1) : '—';
+  const rating = contractor.ratingCount > 0 ? contractor.ratingAvg.toFixed(1) : 'â€"';
   const subheading = contractor.tagline ?? 'Trusted Texas contractor on Conforma';
 
   return (

@@ -1,4 +1,4 @@
-type ZipCoordinate = {
+﻿type ZipCoordinate = {
   lat: number;
   lng: number;
 };

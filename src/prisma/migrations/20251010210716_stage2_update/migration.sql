@@ -1,4 +1,4 @@
-/*
+﻿/*
   Warnings:
 
   - You are about to drop the column `amount` on the `Milestone` table. All the data in the column will be lost.

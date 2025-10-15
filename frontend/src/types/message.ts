@@ -1,4 +1,4 @@
-export type ChatMessage = {
+﻿export type ChatMessage = {
   id: string;
   jobId: string;
   body: string;

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 
 const links = [
   { href: '/dashboard/profile', label: 'Profile' },

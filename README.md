@@ -1,4 +1,4 @@
-# Conforma - Escrow for Texas Home Services
+﻿# Conforma - Escrow for Texas Home Services
 
 Conforma is a web application that allows homeowners to securely fund home-service projects via Escrow.com. Contractors get paid only when milestones are approved by the homeowner.
 
@@ -85,7 +85,7 @@ This repository contains the full monorepo for the Conforma application, includi
 4. **Message the team** by visiting `/dashboard/messages/<jobId>` as a job participant.
 5. **Submit a review** for any completed job from `/dashboard/reviews`.
 6. **Upload license/insurance** at `/dashboard/verification` and approve/reject from `/admin/verification`.
-7. **Check notifications** via the bell icon—new invites, messages, reviews, and document decisions appear instantly.
+7. **Check notifications** via the bell iconâ€"new invites, messages, reviews, and document decisions appear instantly.
 
 ## Deployment
 
