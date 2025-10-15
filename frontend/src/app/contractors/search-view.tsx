@@ -60,8 +60,7 @@ export function ContractorSearchView({ initialFilters }: ContractorSearchViewPro
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey,
     queryFn: () => fetchContractors(filters),
-    keepPreviousData: true,
-  });
+});
 
   const contractors: ContractorSummary[] = data?.results ?? [];
 
