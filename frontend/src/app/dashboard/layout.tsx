@@ -1,4 +1,10 @@
-﻿import Link from 'next/link';
+'use client';
+
+import { useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+
+import { useAuth } from '@/components/auth-context';
 
 const links = [
   { href: '/dashboard/profile', label: 'Profile' },
@@ -8,6 +14,27 @@ const links = [
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      const redirect = encodeURIComponent(pathname || '/dashboard/profile');
+      router.replace(`/login?redirect=${redirect}`);
+    }
+  }, [loading, user, pathname, router]);
+
+  if (!user) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center bg-white/80">
+        <div className="rounded-3xl border border-slate-200/70 bg-white/90 px-8 py-6 text-sm text-slate-600 shadow-lg shadow-slate-900/10 backdrop-blur">
+          {loading ? 'Loading your dashboard...' : 'Redirecting you to login...'}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white/80">
       <div className="container grid gap-6 px-4 py-8 md:grid-cols-[220px_1fr] md:px-6">
@@ -16,7 +43,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <ul className="mt-4 space-y-2 text-sm">
             {links.map((link) => (
               <li key={link.href}>
-                <Link className="block rounded-xl px-3 py-2 text-slate-600 transition hover:bg-primary/5 hover:text-primary" href={link.href}>
+                <Link
+                  className="block rounded-xl px-3 py-2 text-slate-600 transition hover:bg-primary/5 hover:text-primary"
+                  href={link.href}
+                >
                   {link.label}
                 </Link>
               </li>

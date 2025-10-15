@@ -1,8 +1,14 @@
-﻿import Link from "next/link";
+'use client';
 
-import { NotificationBell } from "@/components/notification-bell";
+import Link from 'next/link';
+
+import { useAuth } from '@/components/auth-context';
+import { NotificationBell } from '@/components/notification-bell';
+import { Button } from '@/components/ui/button';
 
 export function Header() {
+  const { user, logout } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
@@ -18,16 +24,47 @@ export function Header() {
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-3">
-          <Link href="/contractors" className="text-sm font-medium text-slate-600 transition hover:text-primary md:hidden">
+          <Link
+            href="/contractors"
+            className="text-sm font-medium text-slate-600 transition hover:text-primary md:hidden"
+          >
             Contractors
           </Link>
-          <Link href="/dashboard/profile" className="text-sm font-medium text-slate-600 transition hover:text-primary">
-            Dashboard
-          </Link>
-          <NotificationBell />
-          <Link href="/register" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-            Get Started
-          </Link>
+          {user ? (
+            <>
+              <Link
+                href="/dashboard/profile"
+                className="text-sm font-medium text-slate-600 transition hover:text-primary"
+              >
+                Dashboard
+              </Link>
+              <NotificationBell />
+              <Button type="button" variant="outline" size="sm" onClick={logout}>
+                Log out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-sm font-medium text-slate-600 transition hover:text-primary"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                Login
+              </Link>
+              <Link
+                href="/login?mode=signup"
+                className="hidden text-sm font-medium text-primary transition hover:text-primary/90 md:inline"
+              >
+                Create account
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

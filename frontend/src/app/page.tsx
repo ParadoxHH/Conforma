@@ -33,16 +33,16 @@ function Hero() {
             </p>
             <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               <Link
-                href="/register"
+                href="/login"
                 className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
               >
-                Get Started
+                Login
               </Link>
               <Link
-                href="/how-it-works"
+                href="/login?mode=signup"
                 className="inline-flex h-12 items-center justify-center rounded-full border border-slate-200/70 bg-white/80 px-8 text-base font-semibold text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/60"
               >
-                See how escrow flows
+                Create an account
               </Link>
             </div>
             <div className="mt-12 grid gap-4 sm:grid-cols-3">
