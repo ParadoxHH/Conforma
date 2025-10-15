@@ -127,19 +127,19 @@ export default function ProfilePage() {
         <div>
           <Label htmlFor="avatarUrl">Avatar URL</Label>
           <Input id="avatarUrl" placeholder="https://" {...register('avatarUrl')} />
-          {errors.avatarUrl ? <p className="text-xs text-destructive">{errors.avatarUrl.message}</p> : null}
+          {errors.avatarUrl ? <p className="text-xs text-destructive">{String(errors.avatarUrl?.message ?? '')}</p> : null}
         </div>
         <div>
           <Label htmlFor="bio">Bio</Label>
           <Textarea id="bio" rows={4} {...register('bio')} />
-          {errors.bio ? <p className="text-xs text-destructive">{errors.bio.message}</p> : null}
+          {errors.bio ? <p className="text-xs text-destructive">{String(errors.bio?.message ?? '')}</p> : null}
         </div>
         {data.role === 'CONTRACTOR' ? (
           <>
             <div>
               <Label htmlFor="companyName">Company name</Label>
               <Input id="companyName" {...register('companyName')} />
-              {errors.companyName ? <p className="text-xs text-destructive">{errors.companyName.message}</p> : null}
+              {errors.companyName ? <p className="text-xs text-destructive">{String(errors.companyName?.message ?? '')}</p> : null}
             </div>
             <div>
               <Label htmlFor="serviceAreas">Service ZIPs</Label>
