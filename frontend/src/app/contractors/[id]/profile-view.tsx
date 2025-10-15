@@ -134,8 +134,7 @@ export function ContractorProfileView({ contractorId }: ContractorProfileViewPro
   } = useQuery({
     queryKey: ['contractor-reviews', contractorId, reviewPage],
     queryFn: () => fetchReviews(contractorId, reviewPage),
-    keepPreviousData: true,
-  });
+    });
 
   if (isLoading || !profile) {
     return <div className="container px-4 py-16">Loading contractorâ€¦</div>;
