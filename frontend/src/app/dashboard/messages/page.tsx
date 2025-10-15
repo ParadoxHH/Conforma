@@ -5,11 +5,11 @@ import { useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
 
- type DashboardJob = {
+type DashboardJob = {
   id: string;
   title: string;
   status: string;
- };
+};
 
 const fetchJobs = () => apiClient.get<DashboardJob[]>('/jobs');
 
@@ -32,7 +32,7 @@ export default function MessagesIndexPage() {
           data.map((job) => (
             <Link
               key={job.id}
-              href={/dashboard/messages/}
+              href={`/dashboard/messages/${job.id}`}
               className="block rounded-2xl border border-slate-200/70 bg-white/80 p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/10"
             >
               <p className="text-sm font-semibold text-slate-900">{job.title}</p>
