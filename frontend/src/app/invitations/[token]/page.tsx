@@ -16,10 +16,7 @@ import { cn } from '@/lib/utils';
 const contractorSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   companyName: z.string().min(2),
-  serviceAreas: z
-    .string()
-    .transform((value) => value.split(',').map((zip) => zip.trim()).filter(Boolean))
-    .refine((value) => value.length > 0, 'Provide at least one service ZIP'),
+  serviceAreas: z.string().min(1, 'Provide at least one service ZIP'),
   trades: z.array(z.string()).min(1, 'Select at least one trade'),
 });
 
@@ -32,7 +29,12 @@ const homeownerSchema = z.object({
   zip: z.string().regex(/^[0-9]{5}$/, 'Enter a 5 digit ZIP'),
 });
 
-type ContractorFormValues = z.infer<typeof contractorSchema>;
+type ContractorFormValues = {
+  password: string;
+  companyName: string;
+  serviceAreas: string;
+  trades: string[];
+};
 type HomeownerFormValues = z.infer<typeof homeownerSchema>;
 
 type InviteDetails = {
@@ -84,13 +86,19 @@ function AcceptContractorInvite({
   });
 
   const mutation = useMutation({
-    mutationFn: (data: ContractorFormValues) =>
-      apiClient.post(`/invites/${token}/accept`, {
+    mutationFn: (data: ContractorFormValues) => {
+      const serviceAreas = data.serviceAreas
+        .split(',')
+        .map((zip) => zip.trim())
+        .filter(Boolean);
+
+      return apiClient.post(`/invites/${token}/accept`, {
         password: data.password,
         companyName: data.companyName,
-        serviceAreas: data.serviceAreas,
+        serviceAreas,
         trades: data.trades,
-      }),
+      });
+    },
     onSuccess,
   });
 
@@ -124,7 +132,9 @@ function AcceptContractorInvite({
       <div>
         <Label htmlFor="serviceAreas">Service ZIPs (comma separated)</Label>
         <Input id="serviceAreas" placeholder="78701, 78702" {...register('serviceAreas')} />
-        {errors.serviceAreas ? <p className="text-xs text-destructive">{errors.serviceAreas.message as string}</p> : null}
+        {errors.serviceAreas ? (
+          <p className="text-xs text-destructive">{String(errors.serviceAreas.message ?? '')}</p>
+        ) : null}
       </div>
       <div>
         <Label>Trades</Label>
@@ -155,7 +165,7 @@ function AcceptContractorInvite({
         {errors.trades ? <p className="text-xs text-destructive">{errors.trades.message}</p> : null}
       </div>
       <Button type="submit" disabled={isSubmitting || mutation.isPending}>
-        {mutation.isPending ? 'Creating accountâ€¦' : 'Accept invitation'}
+        {mutation.isPending ? 'Creating account...' : 'Accept invitation'}
       </Button>
       {mutation.isSuccess ? (
         <p className="text-xs text-success">Invitation accepted. You can now sign in to Conforma.</p>
@@ -253,7 +263,7 @@ function AcceptHomeownerInvite({
         {errors.zip ? <p className="text-xs text-destructive">{errors.zip.message}</p> : null}
       </div>
       <Button type="submit" disabled={isSubmitting || mutation.isPending}>
-        {mutation.isPending ? 'Creating accountâ€¦' : 'Accept invitation'}
+        {mutation.isPending ? 'Creating account...' : 'Accept invitation'}
       </Button>
       {mutation.isSuccess ? (
         <p className="text-xs text-success">Invitation accepted. You can now sign in to Conforma.</p>
@@ -277,7 +287,7 @@ export default function AcceptInvitePage({ params }: { params: { token: string }
   const [accepted, setAccepted] = useState(false);
 
   if (isLoading) {
-    return <div className="container px-4 py-16">Loading invitationâ€¦</div>;
+    return <div className="container px-4 py-16">Loading invitation...</div>;
   }
 
   if (isError || !data) {
