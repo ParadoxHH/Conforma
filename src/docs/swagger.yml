@@ -1,0 +1,458 @@
+openapi: 3.1.0
+info:
+  title: Conforma API
+  version: 2.0.0
+  description: API for Conforma, covering profiles, contractor discovery, invites, messaging, reviews, documents, and notifications.
+servers:
+  - url: http://localhost:3001/api
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201': { description: User created }
+  /auth/login:
+    post:
+      summary: Authenticate a user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200': { description: JWT issued }
+  /profiles/me:
+    get:
+      summary: Get the current profile
+      tags: [Profiles]
+      security:
+        - bearerAuth: []
+      responses:
+        '200': { description: Current user profile }
+    put:
+      summary: Update the current profile
+      tags: [Profiles]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ContractorProfileUpdate'
+                - $ref: '#/components/schemas/HomeownerProfileUpdate'
+      responses:
+        '200': { description: Profile updated }
+  /profiles/contractors/{id}:
+    get:
+      summary: Public contractor profile
+      tags: [Profiles]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Contractor profile }
+  /profiles/contractors/{id}/reviews:
+    get:
+      summary: Contractor reviews
+      tags: [Reviews]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Paginated reviews }
+  /search/contractors:
+    get:
+      summary: Search contractors
+      tags: [Search]
+      parameters:
+        - in: query
+          name: trade
+          schema: { type: string }
+        - in: query
+          name: zip
+          schema: { type: string, pattern: '^[0-9]{5}$' }
+        - in: query
+          name: radius
+          schema: { type: number, minimum: 0 }
+        - in: query
+          name: verified
+          schema: { type: boolean }
+        - in: query
+          name: minRating
+          schema: { type: number, minimum: 0, maximum: 5 }
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: sort
+          schema: { type: string, enum: [rating, distance, recency] }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        '200': { description: Paginated contractor list }
+  /invites:
+    post:
+      summary: Create an invite
+      tags: [Invites]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInviteRequest'
+      responses:
+        '201': { description: Invite created }
+  /invites/{token}:
+    get:
+      summary: Inspect an invite
+      tags: [Invites]
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Invite details }
+  /invites/{token}/accept:
+    post:
+      summary: Accept an invite
+      tags: [Invites]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AcceptContractorInvite'
+                - $ref: '#/components/schemas/AcceptHomeownerInvite'
+      responses:
+        '200': { description: Invite accepted }
+  /jobs:
+    post:
+      summary: Create a job
+      tags: [Jobs]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+      responses:
+        '201': { description: Job created }
+    get:
+      summary: List jobs for the current user
+      tags: [Jobs]
+      security:
+        - bearerAuth: []
+      responses:
+        '200': { description: Job list }
+  /jobs/{id}:
+    get:
+      summary: Job detail
+      tags: [Jobs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Job detail }
+  /jobs/{id}/messages:
+    get:
+      summary: List job messages
+      tags: [Messages]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Message list }
+    post:
+      summary: Post a job message
+      tags: [Messages]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMessageRequest'
+      responses:
+        '201': { description: Message created }
+  /jobs/{id}/messages/read:
+    post:
+      summary: Mark job messages as read
+      tags: [Messages]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Messages marked as read }
+  /jobs/{id}/reviews:
+    post:
+      summary: Create a review for a completed job
+      tags: [Reviews]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+      responses:
+        '201': { description: Review created }
+  /documents/upload-url:
+    post:
+      summary: Generate a document upload URL
+      tags: [Documents]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlRequest'
+      responses:
+        '200': { description: Upload URL issued }
+  /documents:
+    get:
+      summary: List my documents
+      tags: [Documents]
+      security:
+        - bearerAuth: []
+      responses:
+        '200': { description: Document list }
+    post:
+      summary: Submit a document for review
+      tags: [Documents]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDocumentRequest'
+      responses:
+        '201': { description: Document submitted }
+  /admin/documents:
+    get:
+      summary: List documents for admin review
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [PENDING, APPROVED, REJECTED] }
+      responses:
+        '200': { description: Admin document list }
+  /admin/documents/{id}/approve:
+    post:
+      summary: Approve a document
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Document approved }
+  /admin/documents/{id}/reject:
+    post:
+      summary: Reject a document
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectDocumentRequest'
+      responses:
+        '200': { description: Document rejected }
+  /notifications:
+    get:
+      summary: List notifications
+      tags: [Notifications]
+      security:
+        - bearerAuth: []
+      responses:
+        '200': { description: Notification list }
+  /notifications/read:
+    post:
+      summary: Mark notifications as read
+      tags: [Notifications]
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkNotificationsRead'
+      responses:
+        '200': { description: Notifications updated }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+        role: { type: string, enum: [CONTRACTOR, HOMEOWNER] }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+    ContractorProfileUpdate:
+      type: object
+      properties:
+        avatarUrl: { type: string, format: uri }
+        bio: { type: string }
+        companyName: { type: string }
+        serviceAreas:
+          type: array
+          items: { type: string, pattern: '^[0-9]{5}$' }
+    HomeownerProfileUpdate:
+      type: object
+      properties:
+        avatarUrl: { type: string, format: uri }
+        bio: { type: string }
+        displayName: { type: string }
+        allowAlias: { type: boolean }
+    CreateInviteRequest:
+      type: object
+      required: [role, email]
+      properties:
+        role: { type: string, enum: [CONTRACTOR, HOMEOWNER] }
+        email: { type: string, format: email }
+        phone: { type: string }
+        jobId: { type: string }
+    AcceptContractorInvite:
+      type: object
+      required: [password, companyName, serviceAreas, trades]
+      properties:
+        password: { type: string, format: password }
+        companyName: { type: string }
+        serviceAreas:
+          type: array
+          items: { type: string, pattern: '^[0-9]{5}$' }
+        trades:
+          type: array
+          items: { type: string }
+    AcceptHomeownerInvite:
+      type: object
+      required: [password, address, city, state, zip]
+      properties:
+        password: { type: string, format: password }
+        displayName: { type: string }
+        address: { type: string }
+        city: { type: string }
+        state: { type: string, minLength: 2, maxLength: 2 }
+        zip: { type: string, pattern: '^[0-9]{5}$' }
+    CreateJobRequest:
+      type: object
+      required: [title, description, totalPrice, homeownerId, milestones]
+      properties:
+        title: { type: string }
+        description: { type: string }
+        totalPrice: { type: number }
+        homeownerId: { type: string }
+        milestones:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [title, price]
+            properties:
+              title: { type: string }
+              price: { type: number }
+    CreateMessageRequest:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string }
+        attachments:
+          type: array
+          items:
+            type: object
+            properties:
+              url: { type: string, format: uri }
+              type: { type: string }
+    CreateReviewRequest:
+      type: object
+      required: [rating]
+      properties:
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string }
+    UploadUrlRequest:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string, enum: [LICENSE, INSURANCE, OTHER] }
+    CreateDocumentRequest:
+      type: object
+      required: [type, fileUrl]
+      properties:
+        type: { type: string, enum: [LICENSE, INSURANCE, OTHER] }
+        fileUrl: { type: string, format: uri }
+    RejectDocumentRequest:
+      type: object
+      required: [notes]
+      properties:
+        notes: { type: string }
+    MarkNotificationsRead:
+      type: object
+      properties:
+        ids:
+          type: array
+          items: { type: string }

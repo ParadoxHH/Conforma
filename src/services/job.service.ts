@@ -82,6 +82,7 @@ export const getJobsByUser = async (userId: string, role: string, prisma: Prisma
       milestones: true,
       homeowner: { include: { user: true } },
       contractor: { include: { user: true } },
+      reviews: true,
     },
   });
 };
@@ -93,6 +94,7 @@ export const getJobById = async (jobId: string, prisma: PrismaClient = prismaCli
       milestones: true,
       homeowner: { include: { user: true } },
       contractor: { include: { user: true } },
+      reviews: true,
     },
   });
 };

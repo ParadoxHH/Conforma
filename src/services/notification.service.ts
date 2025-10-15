@@ -1,5 +1,7 @@
 import sgMail from '@sendgrid/mail';
 import twilio from 'twilio';
+import { Prisma } from '@prisma/client';
+import prisma from '../lib/prisma';
 
 // --- Email Configuration ---
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
@@ -46,4 +48,96 @@ export const sendSms = async (to: string, body: string) => {
   } catch (error) {
     console.error('Error sending SMS:', error);
   }
+};
+
+type ListOptions = {
+  page?: number;
+  pageSize?: number;
+  unreadOnly?: boolean;
+};
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 20;
+
+export const createInAppNotification = async (
+  userId: string,
+  type: string,
+  payload: Prisma.InputJsonValue,
+) => {
+  try {
+    await prisma.notification.create({
+      data: {
+        userId,
+        type,
+        payload,
+      },
+    });
+  } catch (error) {
+    console.error('Error creating in-app notification:', error);
+  }
+};
+
+export const listNotifications = async (userId: string, options: ListOptions = {}) => {
+  const page = options.page && options.page > 0 ? options.page : DEFAULT_PAGE;
+  const pageSize =
+    options.pageSize && options.pageSize > 0 && options.pageSize <= 100
+      ? options.pageSize
+      : DEFAULT_PAGE_SIZE;
+
+  const where = {
+    userId,
+    ...(options.unreadOnly ? { readAt: null } : {}),
+  };
+
+  const [total, notifications] = await prisma.$transaction([
+    prisma.notification.count({ where }),
+    prisma.notification.findMany({
+      where,
+      orderBy: { sentAt: 'desc' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+  ]);
+
+  return {
+    total,
+    page,
+    pageSize,
+    notifications,
+  };
+};
+
+export const markNotificationsRead = async (userId: string, notificationIds?: string[]) => {
+  if (notificationIds && notificationIds.length > 0) {
+    await prisma.notification.updateMany({
+      where: {
+        userId,
+        id: {
+          in: notificationIds,
+        },
+      },
+      data: {
+        readAt: new Date(),
+      },
+    });
+  } else {
+    await prisma.notification.updateMany({
+      where: {
+        userId,
+        readAt: null,
+      },
+      data: {
+        readAt: new Date(),
+      },
+    });
+  }
+};
+
+export const getUnreadCount = async (userId: string) => {
+  return prisma.notification.count({
+    where: {
+      userId,
+      readAt: null,
+    },
+  });
 };

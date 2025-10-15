@@ -15,11 +15,15 @@ model User {
   email           String          @unique
   password        String
   role            Role            @default(HOMEOWNER)
+  avatarUrl       String?
+  bio             String?
   contractor      Contractor?
   homeowner       Homeowner?
   notifications   Notification[]
   auditLogs       AuditLog[]
   uploadedFiles   EvidenceFile[]
+  documents       Document[]
+  messages        Message[]       @relation("MessageSender")
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 }
@@ -31,7 +35,18 @@ model Contractor {
   companyName     String?
   trade           String?
   payoutAccount   String?
+  serviceAreas    String[] @default([])
+  trades          Trade[]  @default([])
+  portfolio       Json?
+  verifiedKyc     Boolean  @default(false)
+  verifiedLicense Boolean  @default(false)
+  verifiedInsurance Boolean @default(false)
+  ratingAvg       Decimal  @default(0) @db.Decimal(4, 2)
+  ratingCount     Int      @default(0)
   jobs            Job[]
+  reviews         Review[]
+
+  @@index([verifiedKyc, verifiedLicense, verifiedInsurance, ratingAvg], map: "contractor_verification_rating_idx")
 }
 
 model Homeowner {
@@ -43,7 +58,10 @@ model Homeowner {
   state           String   @default("TX")
   zip             String
   phoneNumber     String?
+  displayName     String?
+  allowAlias      Boolean  @default(true)
   jobs            Job[]
+  reviews         Review[]
 }
 
 model Job {
@@ -58,6 +76,9 @@ model Job {
   status              JobStatus   @default(PENDING)
   escrowTransactionId String?
   milestones          Milestone[]
+  messages            Message[]
+  invites             Invite[]
+  reviews             Review[]
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
 }
@@ -107,6 +128,7 @@ model Notification {
   type      String
   payload   Json
   sentAt    DateTime @default(now())
+  readAt    DateTime?
 }
 
 model AuditLog {
@@ -126,6 +148,66 @@ model WebhookEvent {
   payload    Json
   processed  Boolean  @default(false)
   createdAt  DateTime @default(now())
+}
+
+model Review {
+  id            String     @id @default(cuid())
+  job           Job        @relation(fields: [jobId], references: [id])
+  jobId         String
+  contractor    Contractor @relation(fields: [contractorId], references: [id])
+  contractorId  String
+  homeowner     Homeowner  @relation(fields: [homeownerId], references: [id])
+  homeownerId   String
+  rating        Int
+  comment       String?
+  createdAt     DateTime   @default(now())
+
+  @@unique([jobId, homeownerId])
+  @@index([contractorId, createdAt], map: "review_contractor_created_idx")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  job            Job      @relation(fields: [jobId], references: [id])
+  jobId          String
+  sender         User     @relation("MessageSender", fields: [senderUserId], references: [id])
+  senderUserId   String
+  body           String
+  attachments    Json?
+  readByUserIds  String[] @default([])
+  createdAt      DateTime @default(now())
+
+  @@index([jobId, createdAt], map: "message_job_created_idx")
+}
+
+model Invite {
+  id         String        @id @default(cuid())
+  job        Job?          @relation(fields: [jobId], references: [id])
+  jobId      String?
+  role       InviteRole
+  email      String
+  phone      String?
+  token      String        @unique
+  status     InviteStatus  @default(PENDING)
+  createdAt  DateTime      @default(now())
+  expiresAt  DateTime
+
+  @@index([email, status], map: "invite_email_status_idx")
+  @@index([token], map: "invite_token_idx")
+}
+
+model Document {
+  id         String         @id @default(cuid())
+  user       User           @relation(fields: [userId], references: [id])
+  userId     String
+  type       DocumentType
+  url        String
+  status     DocumentStatus @default(PENDING)
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([status], map: "document_status_idx")
 }
 
 enum Role {
@@ -148,4 +230,36 @@ enum MilestoneStatus {
   RELEASED
   REFUNDED
   DISPUTED
+}
+
+enum Trade {
+  ROOFING
+  MOVING
+  SOLAR
+  TREE_TRIMMING
+  HOME_IMPROVEMENT
+  OTHER
+}
+
+enum InviteRole {
+  CONTRACTOR
+  HOMEOWNER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+enum DocumentType {
+  LICENSE
+  INSURANCE
+  OTHER
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

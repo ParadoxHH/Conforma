@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { NotificationBell } from "@/components/notification-bell";
+
 export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -15,7 +17,14 @@ export function Header() {
             <Link href="/blog">Blog</Link>
           </nav>
         </div>
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+        <div className="flex flex-1 items-center justify-end space-x-3">
+          <Link href="/contractors" className="text-sm font-medium text-slate-600 transition hover:text-primary md:hidden">
+            Contractors
+          </Link>
+          <Link href="/dashboard/profile" className="text-sm font-medium text-slate-600 transition hover:text-primary">
+            Dashboard
+          </Link>
+          <NotificationBell />
           <Link href="/register" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
             Get Started
           </Link>

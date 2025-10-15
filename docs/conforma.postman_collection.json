@@ -1,0 +1,263 @@
+{
+    "variable":  [
+                     {
+                         "key":  "api",
+                         "value":  "http://localhost:3001/api"
+                     },
+                     {
+                         "key":  "token",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "jobId",
+                         "value":  ""
+                     }
+                 ],
+    "info":  {
+                 "name":  "Conforma API",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+                 "_postman_id":  "8508d135-f1fa-415e-9664-204958da877e"
+             },
+    "item":  [
+                 {
+                     "name":  "Profiles - Me",
+                     "request":  {
+                                     "method":  "GET",
+                                     "url":  {
+                                                 "host":  [
+                                                              "{{api}}"
+                                                          ],
+                                                 "raw":  "{{api}}/profiles/me",
+                                                 "path":  [
+                                                              "profiles",
+                                                              "me"
+                                                          ]
+                                             },
+                                     "header":  [
+                                                    {
+                                                        "key":  "Authorization",
+                                                        "value":  "Bearer {{token}}"
+                                                    }
+                                                ]
+                                 }
+                 },
+                 {
+                     "name":  "Search Contractors",
+                     "request":  {
+                                     "method":  "GET",
+                                     "url":  {
+                                                 "query":  [
+                                                               {
+                                                                   "key":  "trade",
+                                                                   "value":  "ROOFING"
+                                                               },
+                                                               {
+                                                                   "key":  "verified",
+                                                                   "value":  "true"
+                                                               }
+                                                           ],
+                                                 "host":  [
+                                                              "{{api}}"
+                                                          ],
+                                                 "raw":  "{{api}}/search/contractors?trade=ROOFING\u0026verified=true",
+                                                 "path":  [
+                                                              "search",
+                                                              "contractors"
+                                                          ]
+                                             }
+                                 }
+                 },
+                 {
+                     "name":  "Create Invite",
+                     "request":  {
+                                     "url":  {
+                                                 "host":  [
+                                                              "{{api}}"
+                                                          ],
+                                                 "raw":  "{{api}}/invites",
+                                                 "path":  [
+                                                              "invites"
+                                                          ]
+                                             },
+                                     "method":  "POST",
+                                     "body":  {
+                                                  "raw":  "{\"role\":\"CONTRACTOR\",\"email\":\"new@contractor.com\",\"jobId\":\"{{jobId}}\"}",
+                                                  "mode":  "raw"
+                                              },
+                                     "header":  [
+                                                    {
+                                                        "key":  "Authorization",
+                                                        "value":  "Bearer {{token}}"
+                                                    },
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ]
+                                 }
+                 },
+                 {
+                     "name":  "Accept Invite",
+                     "request":  {
+                                     "url":  {
+                                                 "host":  [
+                                                              "{{api}}"
+                                                          ],
+                                                 "raw":  "{{api}}/invites/{{token}}/accept",
+                                                 "path":  [
+                                                              "invites",
+                                                              "{{token}}",
+                                                              "accept"
+                                                          ]
+                                             },
+                                     "method":  "POST",
+                                     "body":  {
+                                                  "raw":  "{\"password\":\"changeme\",\"companyName\":\"Demo Contractor\",\"serviceAreas\":[\"78701\"],\"trades\":[\"ROOFING\"]}",
+                                                  "mode":  "raw"
+                                              },
+                                     "header":  [
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ]
+                                 }
+                 },
+                 {
+                     "name":  "Job Messages",
+                     "request":  {
+                                     "method":  "GET",
+                                     "url":  {
+                                                 "host":  [
+                                                              "{{api}}"
+                                                          ],
+                                                 "raw":  "{{api}}/jobs/{{jobId}}/messages",
+                                                 "path":  [
+                                                              "jobs",
+                                                              "{{jobId}}",
+                                                              "messages"
+                                                          ]
+                                             },
+                                     "header":  [
+                                                    {
+                                                        "key":  "Authorization",
+                                                        "value":  "Bearer {{token}}"
+                                                    }
+                                                ]
+                                 }
+                 },
+                 {
+                     "name":  "Post Message",
+                     "request":  {
+                                     "url":  {
+                                                 "host":  [
+                                                              "{{api}}"
+                                                          ],
+                                                 "raw":  "{{api}}/jobs/{{jobId}}/messages",
+                                                 "path":  [
+                                                              "jobs",
+                                                              "{{jobId}}",
+                                                              "messages"
+                                                          ]
+                                             },
+                                     "method":  "POST",
+                                     "body":  {
+                                                  "raw":  "{\"body\":\"Checking in on the next milestone.\"}",
+                                                  "mode":  "raw"
+                                              },
+                                     "header":  [
+                                                    {
+                                                        "key":  "Authorization",
+                                                        "value":  "Bearer {{token}}"
+                                                    },
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ]
+                                 }
+                 },
+                 {
+                     "name":  "Submit Review",
+                     "request":  {
+                                     "url":  {
+                                                 "host":  [
+                                                              "{{api}}"
+                                                          ],
+                                                 "raw":  "{{api}}/jobs/{{jobId}}/reviews",
+                                                 "path":  [
+                                                              "jobs",
+                                                              "{{jobId}}",
+                                                              "reviews"
+                                                          ]
+                                             },
+                                     "method":  "POST",
+                                     "body":  {
+                                                  "raw":  "{\"rating\":5,\"comment\":\"Great experience.\"}",
+                                                  "mode":  "raw"
+                                              },
+                                     "header":  [
+                                                    {
+                                                        "key":  "Authorization",
+                                                        "value":  "Bearer {{token}}"
+                                                    },
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ]
+                                 }
+                 },
+                 {
+                     "name":  "Request Upload URL",
+                     "request":  {
+                                     "url":  {
+                                                 "host":  [
+                                                              "{{api}}"
+                                                          ],
+                                                 "raw":  "{{api}}/documents/upload-url",
+                                                 "path":  [
+                                                              "documents",
+                                                              "upload-url"
+                                                          ]
+                                             },
+                                     "method":  "POST",
+                                     "body":  {
+                                                  "raw":  "{\"type\":\"LICENSE\"}",
+                                                  "mode":  "raw"
+                                              },
+                                     "header":  [
+                                                    {
+                                                        "key":  "Authorization",
+                                                        "value":  "Bearer {{token}}"
+                                                    },
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ]
+                                 }
+                 },
+                 {
+                     "name":  "List Notifications",
+                     "request":  {
+                                     "method":  "GET",
+                                     "url":  {
+                                                 "host":  [
+                                                              "{{api}}"
+                                                          ],
+                                                 "raw":  "{{api}}/notifications",
+                                                 "path":  [
+                                                              "notifications"
+                                                          ]
+                                             },
+                                     "header":  [
+                                                    {
+                                                        "key":  "Authorization",
+                                                        "value":  "Bearer {{token}}"
+                                                    }
+                                                ]
+                                 }
+                 }
+             ]
+}
