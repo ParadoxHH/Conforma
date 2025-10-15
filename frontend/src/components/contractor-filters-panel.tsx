@@ -37,6 +37,18 @@ const schema = z.object({
 });
 
 export type ContractorFilters = z.infer<typeof schema>;
+type ContractorFiltersFormValues = z.input<typeof schema>;
+
+const toFormValues = (values: Partial<ContractorFilters>): Partial<ContractorFiltersFormValues> => ({
+  trade: values.trade,
+  zip: values.zip,
+  radius: values.radius !== undefined && values.radius !== null ? String(values.radius) : undefined,
+  verified: values.verified,
+  minRating:
+    values.minRating !== undefined && values.minRating !== null ? String(values.minRating) : undefined,
+  q: values.q,
+  sort: values.sort,
+});
 
 type FiltersPanelProps = {
   defaultValues: Partial<ContractorFilters>;
@@ -56,6 +68,8 @@ const tradeOptions = [
 ];
 
 export function ContractorFiltersPanel({ defaultValues, onSubmit, isLoading, className }: FiltersPanelProps) {
+  const defaultFormValues = useMemo(() => toFormValues(defaultValues), [defaultValues]);
+
   const {
     register,
     handleSubmit,
@@ -63,9 +77,9 @@ export function ContractorFiltersPanel({ defaultValues, onSubmit, isLoading, cla
     watch,
     formState: { errors, isDirty },
     reset,
-  } = useForm<ContractorFilters>({
+  } = useForm<ContractorFiltersFormValues, undefined, ContractorFilters>({
     resolver: zodResolver(schema),
-    defaultValues,
+    defaultValues: defaultFormValues,
   });
 
   const verified = watch('verified');
@@ -165,12 +179,12 @@ export function ContractorFiltersPanel({ defaultValues, onSubmit, isLoading, cla
 
         <div className="flex items-center gap-3">
           <Button type="submit" className="flex-1" disabled={isLoading}>
-            {isLoading ? 'Searchingâ€¦' : 'Apply filters'}
+            {isLoading ? 'Searching...' : 'Apply filters'}
           </Button>
           <Button
             type="button"
             variant="outline"
-            onClick={() => reset(defaultValues)}
+            onClick={() => reset(toFormValues(defaultValues))}
             disabled={!isDirty}
           >
             Reset
