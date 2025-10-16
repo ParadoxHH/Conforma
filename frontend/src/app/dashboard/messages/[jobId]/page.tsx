@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -82,7 +82,7 @@ export default function JobMessagesPage({ params }: { params: { jobId: string } 
   );
 
   if (jobLoading) {
-    return <div>Loading jobâ€¦</div>;
+    return <div>Loading job…</div>;
   }
 
   if (!job) {
@@ -106,7 +106,7 @@ export default function JobMessagesPage({ params }: { params: { jobId: string } 
       <div className="flex flex-1 flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white/80">
         <div className="flex-1 space-y-4 overflow-y-auto p-4">
           {messagesLoading ? (
-            <p className="text-sm text-slate-600">Loading messagesâ€¦</p>
+            <p className="text-sm text-slate-600">Loading messages…</p>
           ) : messages && messages.length > 0 ? (
             messages.map((message) => (
               <div key={message.id} className="flex flex-col gap-1 rounded-2xl bg-primary/5 p-3 text-sm text-slate-700">
@@ -131,14 +131,15 @@ export default function JobMessagesPage({ params }: { params: { jobId: string } 
         <form onSubmit={onSubmit} className="border-t border-slate-200/70 bg-white p-4">
           <Textarea
             rows={3}
-            placeholder="Type a message to the project teamâ€¦"
+            placeholder="Type a message to the project team…"
+                        autoComplete="off"
             {...register('body')}
             disabled={isSubmitting || sendMessage.isPending}
           />
           {errors.body ? <p className="mt-2 text-xs text-destructive">{errors.body.message}</p> : null}
           <div className="mt-3 flex justify-end">
             <Button type="submit" disabled={isSubmitting || sendMessage.isPending}>
-              {sendMessage.isPending ? 'Sendingâ€¦' : 'Send message'}
+              {sendMessage.isPending ? 'Sending…' : 'Send message'}
             </Button>
           </div>
         </form>
@@ -146,3 +147,4 @@ export default function JobMessagesPage({ params }: { params: { jobId: string } 
     </div>
   );
 }
+

@@ -146,6 +146,7 @@ export default function VerificationPage() {
           <Input
             id="fileUrl"
             placeholder="https://cdn.conforma.com/your-license.pdf"
+            autoComplete="url"
             value={fileUrl}
             onChange={(event) => setFileUrl(event.target.value)}
           />

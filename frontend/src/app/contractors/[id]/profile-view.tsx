@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -90,20 +90,36 @@ function InviteContractorPanel({ contractorId, onSuccess }: InvitePanelProps) {
       <form className="mt-4 space-y-4" onSubmit={onSubmit}>
         <div>
           <Label htmlFor="invite-email">Email</Label>
-          <Input id="invite-email" type="email" placeholder="contractor@company.com" {...register('email')} />
+          <Input
+            id="invite-email"
+            type="email"
+            placeholder="contractor@company.com"
+            autoComplete="email"
+            {...register('email')}
+          />
           {errors.email ? <p className="text-xs text-destructive">{errors.email.message}</p> : null}
         </div>
         <div>
           <Label htmlFor="invite-phone">Phone (optional)</Label>
-          <Input id="invite-phone" placeholder="+15125551234" {...register('phone')} />
+          <Input
+            id="invite-phone"
+            placeholder="+15125551234"
+            autoComplete="tel"
+            {...register('phone')}
+          />
           {errors.phone ? <p className="text-xs text-destructive">{errors.phone.message}</p> : null}
         </div>
         <div>
           <Label htmlFor="invite-job">Attach to job (optional)</Label>
-          <Input id="invite-job" placeholder="Existing job ID" {...register('jobId')} />
+          <Input
+            id="invite-job"
+            placeholder="Existing job ID"
+            autoComplete="off"
+            {...register('jobId')}
+          />
         </div>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Sendingâ€¦' : 'Send invite'}
+          {isSubmitting ? 'Sending…' : 'Send invite'}
         </Button>
         {isSubmitSuccessful ? (
           <p className="text-xs text-success">
@@ -137,7 +153,7 @@ export function ContractorProfileView({ contractorId }: ContractorProfileViewPro
     });
 
   if (isLoading || !profile) {
-    return <div className="container px-4 py-16">Loading contractorâ€¦</div>;
+    return <div className="container px-4 py-16">Loading contractor…</div>;
   }
 
   const totalReviewPages = reviews ? Math.ceil(reviews.total / reviews.pageSize) : 1;
@@ -217,7 +233,7 @@ export function ContractorProfileView({ contractorId }: ContractorProfileViewPro
                     >
                       <p className="font-semibold text-slate-900">{item.title}</p>
                       <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">{item.type}</p>
-                      <p className="mt-2 text-xs text-primary">View project â†--</p>
+                      <p className="mt-2 text-xs text-primary">View project �--</p>
                     </Link>
                   ))}
                 </div>
@@ -227,7 +243,7 @@ export function ContractorProfileView({ contractorId }: ContractorProfileViewPro
             <div>
               <h2 className="text-xl font-semibold text-slate-900">Homeowner reviews</h2>
               {reviewsLoading && !reviews ? (
-                <p className="mt-3 text-sm text-slate-600">Loading reviewsâ€¦</p>
+                <p className="mt-3 text-sm text-slate-600">Loading reviews…</p>
               ) : null}
               {reviews && reviews.reviews.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-600">No reviews yet. Invite this contractor to your project to be first.</p>
@@ -288,3 +304,4 @@ export function ContractorProfileView({ contractorId }: ContractorProfileViewPro
     </main>
   );
 }
+
