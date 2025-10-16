@@ -12,8 +12,25 @@ export const createJob = async (
 ) => {
   const { title, description, totalPrice, homeownerId, milestones } = data;
 
+  if (!Array.isArray(milestones)) {
+    throw new Error('Milestones must be provided as an array.');
+  }
+
   if (milestones.length === 0 || milestones.length > 3) {
     throw new Error('A job must have between 1 and 3 milestones.');
+  }
+
+  const invalidMilestone = milestones.find(
+    (milestone: any) =>
+      !milestone ||
+      typeof milestone.title !== 'string' ||
+      milestone.title.trim() === '' ||
+      typeof milestone.price !== 'number' ||
+      Number.isNaN(milestone.price),
+  );
+
+  if (invalidMilestone) {
+    throw new Error('Each milestone must include a title and numeric price.');
   }
 
   const milestonesTotalPrice = milestones.reduce((sum: number, m: any) => sum + m.price, 0);

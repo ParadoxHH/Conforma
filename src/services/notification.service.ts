@@ -2,17 +2,36 @@
 import twilio from 'twilio';
 import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
+import { logger } from '../utils/logger';
 
 // --- Email Configuration ---
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
-const fromEmail = process.env.SENDGRID_FROM_EMAIL!;
+const sendgridApiKey = process.env.SENDGRID_API_KEY;
+const sendgridFromEmail = process.env.SENDGRID_FROM_EMAIL;
+const sendgridConfigured = Boolean(sendgridApiKey && sendgridFromEmail);
+
+if (sendgridConfigured && sendgridApiKey) {
+  try {
+    sgMail.setApiKey(sendgridApiKey);
+  } catch (error) {
+    logger.error('Failed to configure SendGrid API key', error);
+  }
+} else {
+  logger.warn('SendGrid credentials missing; email notifications are disabled');
+}
 
 // --- SMS Configuration ---
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER!;
+const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
+const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+const twilioConfigured = Boolean(twilioAccountSid && twilioAuthToken && twilioPhoneNumber);
+
+const twilioClient = twilioConfigured
+  ? twilio(twilioAccountSid as string, twilioAuthToken as string)
+  : null;
+
+if (!twilioConfigured) {
+  logger.warn('Twilio credentials missing; SMS notifications are disabled');
+}
 
 
 /**
@@ -23,7 +42,12 @@ const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER!;
  * @param html - The HTML content of the email.
  */
 export const sendEmail = async (to: string, subject: string, text: string, html: string) => {
-  const msg = { to, from: fromEmail, subject, text, html };
+  if (!sendgridConfigured || !sendgridFromEmail) {
+    logger.warn(`Skipped sending email to ${to}: SendGrid is not configured`);
+    return;
+  }
+
+  const msg = { to, from: sendgridFromEmail, subject, text, html };
   try {
     await sgMail.send(msg);
     console.log(`Email sent to ${to}`);
@@ -38,6 +62,11 @@ export const sendEmail = async (to: string, subject: string, text: string, html:
  * @param body - The text of the message.
  */
 export const sendSms = async (to: string, body: string) => {
+  if (!twilioConfigured || !twilioClient || !twilioPhoneNumber) {
+    logger.warn(`Skipped sending SMS to ${to}: Twilio is not configured`);
+    return;
+  }
+
   try {
     await twilioClient.messages.create({
       body,

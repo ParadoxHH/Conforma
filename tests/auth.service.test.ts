@@ -18,6 +18,7 @@ describe('Auth Service', () => {
     expect(user).toBeDefined();
     expect(mockArgon2.hash).toHaveBeenCalledWith('password');
     expect(mockPrisma.user.create).toHaveBeenCalled();
+    expect(user).not.toHaveProperty('password');
   });
 
   it('should login a user', async () => {
@@ -36,5 +37,6 @@ describe('Auth Service', () => {
     expect(result.token).toBe(token);
     expect(mockArgon2.verify).toHaveBeenCalledWith('hashedpassword', 'password');
     expect(mockJwt.sign).toHaveBeenCalled();
+    expect(result.user).not.toHaveProperty('password');
   });
 });

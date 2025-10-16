@@ -16,7 +16,7 @@ This directory contains the project plan and requirements for **Conforma**, a Te
     *   Escrow.com API for funding and payments
     *   SendGrid for email notifications
     *   Twilio for SMS notifications
-    *   node-cron or BullMQ for background jobs
+    *   node-cron for background jobs
     *   OpenAPI 3.1 for API documentation
     *   Docker for containerization
 
@@ -43,9 +43,7 @@ The project is broken down into the following stages:
 
 ## Building and Running
 
-**TODO:** Add specific commands for building, running, and testing the project once the code is available.
-
-### Backend (Placeholder)
+### Backend
 
 ```bash
 # Install dependencies
@@ -61,9 +59,12 @@ npx prisma db seed
 npm run dev
 ```
 
-### Frontend (Placeholder)
+### Frontend
 
 ```bash
+# Navigate to the frontend directory
+cd frontend
+
 # Install dependencies
 npm install
 
@@ -71,8 +72,18 @@ npm install
 npm run dev
 ```
 
+### Docker
+
+```bash
+# Build and run the containers
+docker-compose up --build
+```
+
 ## Development Conventions
 
 *   **Code Style:** Follow standard conventions for TypeScript, Node.js, and React.
+*   **Database Schema:** The database schema is defined in `src/prisma/schema.prisma`.
+*   **API Documentation:** The backend API is documented using OpenAPI 3.1. The specification can be found at `docs/swagger.yml` and is served at `/docs` on the running backend.
 *   **Testing:** Write unit and integration tests for the backend, and E2E tests for the frontend.
-*   **API Documentation:** Maintain an up-to-date OpenAPI specification for the backend API.
+    *   Backend tests are run with `npm test`.
+    *   Frontend E2E tests are run with `cd frontend && npm run test:e2e`.

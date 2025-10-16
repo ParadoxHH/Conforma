@@ -24,9 +24,18 @@ export const login = async (req: Request, res: Response) => {
 
 export const getMe = async (req: Request, res: Response) => {
   try {
-    // @ts-ignore
-    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
-    res.status(200).json(user);
+    const { id } = (req as Request & { user?: { id?: string } }).user ?? {};
+    if (!id) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const { password, ...safeUser } = user;
+    res.status(200).json(safeUser);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching user' });
   }

@@ -96,7 +96,10 @@ export default function ProfilePage() {
             bio: values.bio || null,
             companyName: values.companyName || null,
             serviceAreas: values.serviceAreas
-              ? values.serviceAreas.split().map((zip: string) => zip.trim()).filter(Boolean)
+              ? values.serviceAreas
+                  .split(',')
+                  .map((zip: string) => zip.trim())
+                  .filter((zip: string) => zip.length > 0)
               : [],
           };
           await mutation.mutateAsync(payload);

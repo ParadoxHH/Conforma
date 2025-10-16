@@ -3,7 +3,16 @@ import * as argon2 from 'argon2';
 import * as jwt from 'jsonwebtoken';
 import prismaClient from '../lib/prisma';
 
-export const register = async (data: any, prisma: PrismaClient = prismaClient, argon: typeof argon2 = argon2) => {
+const sanitizeUser = <T extends { password?: string | null }>(user: T): Omit<T, 'password'> => {
+  const { password, ...safeUser } = user;
+  return safeUser as Omit<T, 'password'>;
+};
+
+export const register = async (
+  data: any,
+  prisma: PrismaClient = prismaClient,
+  argon: typeof argon2 = argon2,
+) => {
   const { email, password, role } = data;
   const hashedPassword = await argon.hash(password);
   
@@ -15,10 +24,15 @@ export const register = async (data: any, prisma: PrismaClient = prismaClient, a
     },
   });
 
-  return user;
+  return sanitizeUser(user);
 };
 
-export const login = async (data: any, prisma: PrismaClient = prismaClient, argon: typeof argon2 = argon2, jsonwebtoken: typeof jwt = jwt) => {
+export const login = async (
+  data: any,
+  prisma: PrismaClient = prismaClient,
+  argon: typeof argon2 = argon2,
+  jsonwebtoken: typeof jwt = jwt,
+) => {
   const { email, password } = data;
   const user = await prisma.user.findUnique({ where: { email } });
 
@@ -32,9 +46,11 @@ export const login = async (data: any, prisma: PrismaClient = prismaClient, argo
     throw new Error('Invalid credentials');
   }
 
+  const { password: _password, ...safeUser } = user;
+
   const token = jsonwebtoken.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET!, {
     expiresIn: '1d',
   });
 
-  return { user, token };
+  return { user: safeUser, token };
 };
