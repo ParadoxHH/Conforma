@@ -8,7 +8,9 @@ type RequestOptions = RequestInit & {
 };
 
 function buildUrl(path: string, query?: Record<string, string | number | boolean | undefined>) {
-  const url = new URL(path, API_BASE_URL);
+  const base = API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
+  const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+  const url = new URL(normalizedPath, base);
   if (query) {
     Object.entries(query)
       .filter(([, value]) => value !== undefined && value !== null && value !== '')
