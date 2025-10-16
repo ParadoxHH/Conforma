@@ -58,10 +58,10 @@ export function LeadForm() {
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>I am a...</FormLabel>
+              <FormLabel htmlFor="lead-role">I am a...</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger id="lead-role">
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
                 </FormControl>
@@ -79,9 +79,9 @@ export function LeadForm() {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel htmlFor="lead-name">Name</FormLabel>
               <FormControl>
-                <Input name="name" placeholder="Your Name" autoComplete="name" {...field} />
+                <Input id="lead-name" placeholder="Your Name" autoComplete="name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -92,9 +92,9 @@ export function LeadForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel htmlFor="lead-email">Email</FormLabel>
               <FormControl>
-                <Input name="email" placeholder="your.email@example.com" autoComplete="email" {...field} />
+                <Input id="lead-email" placeholder="your.email@example.com" autoComplete="email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -105,9 +105,9 @@ export function LeadForm() {
           name="message"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Message</FormLabel>
+              <FormLabel htmlFor="lead-message">Message</FormLabel>
               <FormControl>
-                <Textarea name="message" placeholder="How can we help?" autoComplete="off" {...field} />
+                <Textarea id="lead-message" placeholder="How can we help?" autoComplete="off" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

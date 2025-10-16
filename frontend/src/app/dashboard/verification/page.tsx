@@ -145,7 +145,7 @@ export default function VerificationPage() {
           <Label htmlFor="fileUrl">File URL</Label>
           <Input
             id="fileUrl"
-            name="fileUrl"
+            
             placeholder="https://cdn.conforma.com/your-license.pdf"
             autoComplete="url"
             value={fileUrl}
