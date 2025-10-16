@@ -133,7 +133,7 @@ export default function JobMessagesPage({ params }: { params: { jobId: string } 
             rows={3}
             placeholder="Type a message to the project team…"
                         autoComplete="off"
-            name="body" {...register('body')}
+            {...register('body')}
             disabled={isSubmitting || sendMessage.isPending}
           />
           {errors.body ? <p className="mt-2 text-xs text-destructive">{errors.body.message}</p> : null}
