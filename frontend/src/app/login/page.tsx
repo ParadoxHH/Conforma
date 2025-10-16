@@ -136,6 +136,7 @@ function LoginComponent() {
                     type="email"
                     inputMode="email"
                     autoComplete="email"
+                    name="email"
                     placeholder="you@example.com"
                     value={loginEmail}
                     onChange={(event) => setLoginEmail(event.target.value)}
@@ -148,6 +149,7 @@ function LoginComponent() {
                     id="login-password"
                     type="password"
                     autoComplete="current-password"
+                    name="password"
                     placeholder="Enter your password"
                     value={loginPassword}
                     onChange={(event) => setLoginPassword(event.target.value)}
@@ -169,6 +171,7 @@ function LoginComponent() {
                     type="email"
                     inputMode="email"
                     autoComplete="email"
+                    name="email"
                     placeholder="team@company.com"
                     value={createEmail}
                     onChange={(event) => setCreateEmail(event.target.value)}
@@ -181,6 +184,7 @@ function LoginComponent() {
                     id="create-password"
                     type="password"
                     autoComplete="new-password"
+                    name="password"
                     placeholder="At least 8 characters"
                     value={createPassword}
                     onChange={(event) => setCreatePassword(event.target.value)}
@@ -193,6 +197,7 @@ function LoginComponent() {
                     id="create-password-confirm"
                     type="password"
                     autoComplete="new-password"
+                    name="confirmPassword"
                     placeholder="Re-enter your password"
                     value={createConfirmPassword}
                     onChange={(event) => setCreateConfirmPassword(event.target.value)}
@@ -201,6 +206,7 @@ function LoginComponent() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="create-role">I&apos;m joining as a</Label>
+                  <input type="hidden" name="role" value={createRole} />
                   <Select value={createRole} onValueChange={(value) => setCreateRole(value as 'homeowner' | 'contractor')}>
                     <SelectTrigger id="create-role">
                       <SelectValue placeholder="Select a role" />
