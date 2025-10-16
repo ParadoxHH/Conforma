@@ -4,6 +4,7 @@ set -o errexit
 
 npm install
 npx prisma migrate resolve --applied 20251010202212_init || true
+npx prisma migrate resolve --applied 20251010210716_stage2_update || true
 npx prisma migrate deploy
 npx prisma generate
-npm run build                   
+npm run build
