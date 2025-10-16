@@ -1,7 +1,10 @@
-﻿const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api';
+
+let authToken: string | null = null;
 
 type RequestOptions = RequestInit & {
   query?: Record<string, string | number | boolean | undefined>;
+  skipAuth?: boolean;
 };
 
 function buildUrl(path: string, query?: Record<string, string | number | boolean | undefined>) {
@@ -15,14 +18,20 @@ function buildUrl(path: string, query?: Record<string, string | number | boolean
 }
 
 async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { query, headers, ...rest } = options;
+  const { query, headers, skipAuth, ...rest } = options;
   const url = buildUrl(path, query);
+  const resolvedHeaders: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...(headers ?? {}),
+  };
+
+  if (!skipAuth && authToken && !(resolvedHeaders as Record<string, string>).Authorization) {
+    (resolvedHeaders as Record<string, string>).Authorization = `Bearer ${authToken}`;
+  }
+
   const response = await fetch(url, {
     ...rest,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(headers ?? {}),
-    },
+    headers: resolvedHeaders,
     credentials: 'include',
   });
 
@@ -49,4 +58,8 @@ export const apiClient = {
     apiFetch<T>(path, { ...options, method: 'PUT', body: body ? JSON.stringify(body) : undefined }),
   patch: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     apiFetch<T>(path, { ...options, method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
+};
+
+export const setAuthToken = (token: string | null) => {
+  authToken = token;
 };

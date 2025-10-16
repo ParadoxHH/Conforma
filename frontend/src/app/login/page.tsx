@@ -21,8 +21,10 @@ function LoginComponent() {
     searchParams.get('mode') === 'signup' ? 'create' : 'login',
   );
   const [loginEmail, setLoginEmail] = useState('');
-  const [createName, setCreateName] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [createEmail, setCreateEmail] = useState('');
+  const [createPassword, setCreatePassword] = useState('');
+  const [createConfirmPassword, setCreateConfirmPassword] = useState('');
   const [createRole, setCreateRole] = useState<'homeowner' | 'contractor'>('homeowner');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -39,15 +41,20 @@ function LoginComponent() {
     event.preventDefault();
     setError(null);
     const email = sanitizeEmail(loginEmail);
+    const password = loginPassword;
 
     if (!email) {
       setError('Please enter the email associated with your account.');
       return;
     }
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
 
     setSubmitting(true);
     try {
-      await login({ email });
+      await login({ email, password });
       router.replace(redirect);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to log in with those details.');
@@ -59,19 +66,28 @@ function LoginComponent() {
   const handleCreateAccount = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    const name = createName.trim();
     const email = sanitizeEmail(createEmail);
+    const password = createPassword;
+    const confirmPassword = createConfirmPassword;
 
-    if (!name || !email) {
-      setError('Please share both your name and email so we can set up your workspace.');
+    if (!email) {
+      setError('Please provide a valid work email so we can set up your workspace.');
+      return;
+    }
+    if (!password || password.length < 8) {
+      setError('Your password must be at least 8 characters long.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match. Please double-check and try again.');
       return;
     }
 
     setSubmitting(true);
     try {
       await createAccount({
-        name,
         email,
+        password,
         role: createRole,
       });
       router.replace(redirect);
@@ -100,8 +116,8 @@ function LoginComponent() {
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Access Conforma</span>
             <h1 className="mt-3 text-3xl font-semibold text-slate-900">Log in or create your workspace</h1>
             <p className="mt-2 text-sm text-slate-600">
-              Use your email to log in if you already have access. New to Conforma? Create your homeowner or contractor
-              workspace in one step.
+              Use your email and password to access Conforma. New to the platform? Create your homeowner or contractor
+              workspace in a few quick steps.
             </p>
           </div>
 
@@ -123,6 +139,19 @@ function LoginComponent() {
                     placeholder="you@example.com"
                     value={loginEmail}
                     onChange={(event) => setLoginEmail(event.target.value)}
+                    disabled={submitting}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Password</Label>
+                  <Input
+                    id="login-password"
+                    type="password"
+                    autoComplete="current-password"
+                    placeholder="Enter your password"
+                    value={loginPassword}
+                    onChange={(event) => setLoginPassword(event.target.value)}
+                    disabled={submitting}
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={submitting}>
@@ -134,16 +163,6 @@ function LoginComponent() {
             <TabsContent value="create" className="mt-6">
               <form className="space-y-6" onSubmit={handleCreateAccount}>
                 <div className="space-y-2">
-                  <Label htmlFor="create-name">Full name</Label>
-                  <Input
-                    id="create-name"
-                    autoComplete="name"
-                    placeholder="Jane Contractor"
-                    value={createName}
-                    onChange={(event) => setCreateName(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="create-email">Work email</Label>
                   <Input
                     id="create-email"
@@ -153,10 +172,35 @@ function LoginComponent() {
                     placeholder="team@company.com"
                     value={createEmail}
                     onChange={(event) => setCreateEmail(event.target.value)}
+                    disabled={submitting}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="create-role">I’m joining as a</Label>
+                  <Label htmlFor="create-password">Password</Label>
+                  <Input
+                    id="create-password"
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="At least 8 characters"
+                    value={createPassword}
+                    onChange={(event) => setCreatePassword(event.target.value)}
+                    disabled={submitting}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-password-confirm">Confirm password</Label>
+                  <Input
+                    id="create-password-confirm"
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="Re-enter your password"
+                    value={createConfirmPassword}
+                    onChange={(event) => setCreateConfirmPassword(event.target.value)}
+                    disabled={submitting}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-role">I&apos;m joining as a</Label>
                   <Select value={createRole} onValueChange={(value) => setCreateRole(value as 'homeowner' | 'contractor')}>
                     <SelectTrigger id="create-role">
                       <SelectValue placeholder="Select a role" />

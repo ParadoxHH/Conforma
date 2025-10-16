@@ -1,23 +1,48 @@
 import { Request, Response } from 'express';
-import * as authService from '../services/auth.service';
-import prisma from '../lib/prisma';
 import * as argon2 from 'argon2';
 import * as jwt from 'jsonwebtoken';
+import { z } from 'zod';
+import * as authService from '../services/auth.service';
+import prisma from '../lib/prisma';
+
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8, 'Password must be at least 8 characters long'),
+  role: z.enum(['HOMEOWNER', 'CONTRACTOR']),
+});
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8, 'Password must be at least 8 characters long'),
+});
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const user = await authService.register(req.body, prisma, argon2);
+    const payload = registerSchema.parse(req.body);
+    const user = await authService.register(payload, prisma, argon2);
     res.status(201).json(user);
-  } catch (error) {
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Validation failed', errors: error.issues });
+    }
+
+    if (error?.code === 'P2002') {
+      return res.status(409).json({ message: 'Email already in use' });
+    }
+
     res.status(500).json({ message: 'Error registering user' });
   }
 };
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { user, token } = await authService.login(req.body, prisma, argon2, jwt);
+    const credentials = loginSchema.parse(req.body);
+    const { user, token } = await authService.login(credentials, prisma, argon2, jwt);
     res.status(200).json({ user, token });
-  } catch (error) {
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Validation failed', errors: error.issues });
+    }
     res.status(401).json({ message: 'Invalid credentials' });
   }
 };

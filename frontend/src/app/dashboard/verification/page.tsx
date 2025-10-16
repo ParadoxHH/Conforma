@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
@@ -46,8 +46,20 @@ export default function VerificationPage() {
   const [fileUrl, setFileUrl] = useState('');
   const [uploadHint, setUploadHint] = useState<UploadUrlResponse | null>(null);
 
-  const { data: docsData, refetch } = useQuery({ queryKey: ['documents'], queryFn: fetchDocuments });
-  const { data: badges } = useQuery({ queryKey: ['profile-verification'], queryFn: fetchProfileSummary });
+  const {
+    data: docsData,
+    refetch,
+    isLoading: docsLoading,
+    isError: docsError,
+    error: docsErrorDetails,
+  } = useQuery({ queryKey: ['documents'], queryFn: fetchDocuments });
+
+  const {
+    data: badges,
+    isLoading: badgesLoading,
+    isError: badgesError,
+    error: badgesErrorDetails,
+  } = useQuery({ queryKey: ['profile-verification'], queryFn: fetchProfileSummary });
 
   const uploadLinkMutation = useMutation({
     mutationFn: () => apiClient.post<UploadUrlResponse>('/documents/upload-url', { type: selectedType }),
@@ -66,8 +78,26 @@ export default function VerificationPage() {
     },
   });
 
-  const badgesState = badges ?? { kyc: false, license: false, insurance: false };
+  if (docsLoading || badgesLoading) {
+    return <p>Loading verification details...</p>;
+  }
 
+  if (docsError || badgesError) {
+    const message =
+      docsErrorDetails instanceof Error
+        ? docsErrorDetails.message
+        : badgesErrorDetails instanceof Error
+        ? badgesErrorDetails.message
+        : 'Unable to load verification details. Please sign in again to continue.';
+
+    return (
+      <div className="rounded-3xl border border-destructive/20 bg-destructive/5 p-6 text-sm text-destructive">
+        {message}
+      </div>
+    );
+  }
+
+  const badgesState = badges ?? { kyc: false, license: false, insurance: false };
   const documents = docsData?.documents ?? [];
 
   return (
@@ -84,7 +114,7 @@ export default function VerificationPage() {
       <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-sm shadow-slate-900/5">
         <h2 className="text-lg font-semibold text-slate-900">Upload new document</h2>
         <p className="mt-1 text-xs text-slate-500">
-          Request an upload URL, then send the generated `uploadUrl` a PUT request with your file. Paste the resulting file URL below.
+          Request an upload URL, then send the generated URL a PUT request with your file. Paste the resulting file URL below.
         </p>
         <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-end">
           <div className="flex-1">
@@ -101,7 +131,7 @@ export default function VerificationPage() {
             </Select>
           </div>
           <Button type="button" onClick={() => uploadLinkMutation.mutate()} disabled={uploadLinkMutation.isPending}>
-            {uploadLinkMutation.isPending ? 'Requestingâ€¦' : 'Generate upload URL'}
+            {uploadLinkMutation.isPending ? 'Requesting...' : 'Generate upload URL'}
           </Button>
         </div>
         {uploadHint ? (
@@ -126,7 +156,7 @@ export default function VerificationPage() {
           disabled={submitDocumentMutation.isPending || !fileUrl}
           onClick={() => submitDocumentMutation.mutate()}
         >
-          {submitDocumentMutation.isPending ? 'Submittingâ€¦' : 'Submit for review'}
+          {submitDocumentMutation.isPending ? 'Submitting...' : 'Submit for review'}
         </Button>
         {submitDocumentMutation.isSuccess ? (
           <p className="mt-2 text-xs text-success">Document submitted. We will notify you once reviewed.</p>
@@ -173,3 +203,4 @@ export default function VerificationPage() {
     </div>
   );
 }
+

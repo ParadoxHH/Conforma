@@ -10,22 +10,29 @@ import {
   useState,
 } from 'react';
 
+import { apiClient, setAuthToken } from '@/lib/api-client';
+
 type AuthUser = {
   id: string;
   email: string;
-  name?: string;
-  role: 'homeowner' | 'contractor';
+  role: 'ADMIN' | 'CONTRACTOR' | 'HOMEOWNER';
   createdAt: string;
+  updatedAt?: string;
+};
+
+type StoredAuthState = {
+  token: string;
+  user: AuthUser;
 };
 
 type LoginPayload = {
   email: string;
-  name?: string;
+  password: string;
 };
 
 type CreateAccountPayload = {
-  name: string;
   email: string;
+  password: string;
   role: 'homeowner' | 'contractor';
 };
 
@@ -37,16 +44,9 @@ type AuthContextValue = {
   logout: () => void;
 };
 
-const STORAGE_KEY = 'conforma.auth.user';
+const STORAGE_KEY = 'conforma.auth.state';
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-const generateId = () => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `user_${Math.random().toString(36).slice(2, 10)}`;
-};
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -56,89 +56,132 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const persistState = useCallback((state: StoredAuthState | null) => {
     if (typeof window === 'undefined') {
       return;
     }
 
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as AuthUser;
-        setUser(parsed);
-      }
-    } catch (error) {
-      console.warn('Unable to restore saved session', error);
-      window.localStorage.removeItem(STORAGE_KEY);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const persistUser = useCallback((nextUser: AuthUser | null) => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    if (nextUser) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
+    if (state) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } else {
       window.localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
 
+  const applyAuthState = useCallback(
+    (state: StoredAuthState | null) => {
+      if (state) {
+        setAuthToken(state.token);
+        setUser(state.user);
+        persistState(state);
+      } else {
+        setAuthToken(null);
+        setUser(null);
+        persistState(null);
+      }
+    },
+    [persistState],
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    let isMounted = true;
+
+    const restore = async () => {
+      try {
+        const stored = window.localStorage.getItem(STORAGE_KEY);
+        if (!stored) {
+          return;
+        }
+
+        const parsed = JSON.parse(stored) as StoredAuthState;
+        if (!parsed?.token) {
+          return;
+        }
+
+        if (isMounted) {
+          applyAuthState(parsed);
+        }
+
+        try {
+          const profile = await apiClient.get<AuthUser>('/auth/me');
+          if (isMounted) {
+            applyAuthState({ token: parsed.token, user: profile });
+          }
+        } catch (error) {
+          if (isMounted) {
+            applyAuthState(null);
+          }
+        }
+      } catch (error) {
+        if (isMounted) {
+          applyAuthState(null);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    restore();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [applyAuthState]);
+
   const login = useCallback(
-    async ({ email, name }: LoginPayload) => {
+    async ({ email, password }: LoginPayload) => {
       const sanitizedEmail = email.trim().toLowerCase();
       if (!sanitizedEmail) {
         throw new Error('A valid email address is required to sign in.');
       }
+      if (!password) {
+        throw new Error('Please enter your password.');
+      }
 
-      const nextUser: AuthUser = {
-        id: user?.id ?? generateId(),
-        email: sanitizedEmail,
-        name: name?.trim() || user?.name,
-        role: user?.role ?? 'homeowner',
-        createdAt: user?.createdAt ?? new Date().toISOString(),
-      };
+      const { user: nextUser, token } = await apiClient.post<{ user: AuthUser; token: string }>(
+        '/auth/login',
+        { email: sanitizedEmail, password },
+        { skipAuth: true },
+      );
 
-      setUser(nextUser);
-      persistUser(nextUser);
+      applyAuthState({ token, user: nextUser });
     },
-    [persistUser, user],
+    [applyAuthState],
   );
 
   const createAccount = useCallback(
-    async ({ email, name, role }: CreateAccountPayload) => {
+    async ({ email, password, role }: CreateAccountPayload) => {
       const sanitizedEmail = email.trim().toLowerCase();
-      const trimmedName = name.trim();
-
-      if (!trimmedName) {
-        throw new Error('Please share your name so we can personalise your workspace.');
-      }
 
       if (!sanitizedEmail) {
         throw new Error('A valid email address is required to continue.');
       }
+      if (!password || password.length < 8) {
+        throw new Error('Password must be at least 8 characters.');
+      }
 
-      const nextUser: AuthUser = {
-        id: generateId(),
-        email: sanitizedEmail,
-        name: trimmedName,
-        role,
-        createdAt: new Date().toISOString(),
-      };
+      const normalizedRole = role === 'contractor' ? 'CONTRACTOR' : 'HOMEOWNER';
 
-      setUser(nextUser);
-      persistUser(nextUser);
+      await apiClient.post(
+        '/auth/register',
+        { email: sanitizedEmail, password, role: normalizedRole },
+        { skipAuth: true },
+      );
+
+      await login({ email: sanitizedEmail, password });
     },
-    [persistUser],
+    [login],
   );
 
   const logout = useCallback(() => {
-    setUser(null);
-    persistUser(null);
-  }, [persistUser]);
+    applyAuthState(null);
+  }, [applyAuthState]);
 
   const value = useMemo(
     () => ({

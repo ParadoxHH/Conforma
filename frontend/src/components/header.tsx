@@ -47,21 +47,9 @@ export function Header() {
             <>
               <Link
                 href="/login"
-                className="text-sm font-medium text-slate-600 transition hover:text-primary"
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/login"
                 className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
-                Login
-              </Link>
-              <Link
-                href="/login?mode=signup"
-                className="hidden text-sm font-medium text-primary transition hover:text-primary/90 md:inline"
-              >
-                Create account
+                Access Conforma
               </Link>
             </>
           )}

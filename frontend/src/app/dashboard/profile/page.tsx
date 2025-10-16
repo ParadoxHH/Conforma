@@ -46,7 +46,7 @@ const homeownerSchema = z.object({
 });
 
 export default function ProfilePage() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error: queryError } = useQuery({
     queryKey: ['profile'],
     queryFn: () => apiClient.get<ProfileResponse>('/profiles/me'),
   });
@@ -116,8 +116,16 @@ export default function ProfilePage() {
     [data, handleSubmit, mutation],
   );
 
-  if (isLoading || !data) {
+  if (isLoading) {
     return <p>Loading profile...</p>;
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="rounded-3xl border border-destructive/20 bg-destructive/5 p-6 text-sm text-destructive">
+        {queryError instanceof Error ? queryError.message : 'Unable to load profile. Please try again after signing in.'}
+      </div>
+    );
   }
 
   return (
