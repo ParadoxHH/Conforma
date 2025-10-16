@@ -52,7 +52,6 @@ export default function HowItWorks() {
         align="left"
         actions={[
           { href: "/register", label: "Launch your project" },
-          { href: "/contact", label: "Book a process walkthrough", variant: "secondary" },
         ]}
       >
         <div className="grid gap-4 sm:grid-cols-3">
@@ -122,19 +121,10 @@ export default function HowItWorks() {
 
       <section className="bg-section-muted py-16">
         <div className="container px-4 md:px-6">
-          <div className="surface-card flex flex-col items-start gap-6 rounded-3xl border border-white/60 bg-white/90 p-8 shadow-lg shadow-slate-900/10 backdrop-blur md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold text-slate-900">Start with a guided session</h2>
-              <p className="mt-2 max-w-xl text-sm text-slate-600">
-                Share your timeline, contractor list, and budget. We will configure milestones and documentation together in about 30 minutes.
-              </p>
-            </div>
-            <Link
-              href="/contact"
-              className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
-            >
-              Book a walkthrough
-            </Link>
+          <div className="surface-card rounded-3xl border border-white/60 bg-white/90 p-8 text-sm text-slate-600 shadow-lg shadow-slate-900/10 backdrop-blur">
+            <p>
+              Ready to see Conforma in action? Register to set up your escrow workspace—our team will follow up once your milestones are in place.
+            </p>
           </div>
         </div>
       </section>
