@@ -117,21 +117,21 @@ function AcceptContractorInvite({
     <form className="space-y-4" onSubmit={onSubmit}>
       <div>
         <Label>Email</Label>
-        <Input value={email} readOnly autoComplete="email" />
+        <Input value={email} readOnly autoComplete="email" name="email" />
       </div>
       <div>
         <Label htmlFor="password">Set password</Label>
-        <Input id="password" type="password" autoComplete="new-password" {...register('password')} />
+        <Input id="password" name="password" type="password" autoComplete="new-password" {...register('password')} />
         {errors.password ? <p className="text-xs text-destructive">{errors.password.message}</p> : null}
       </div>
       <div>
         <Label htmlFor="companyName">Company name</Label>
-        <Input id="companyName" autoComplete="organization" {...register('companyName')} />
+        <Input id="companyName" name="companyName" autoComplete="organization" {...register('companyName')} />
         {errors.companyName ? <p className="text-xs text-destructive">{errors.companyName.message}</p> : null}
       </div>
       <div>
         <Label htmlFor="serviceAreas">Service ZIPs (comma separated)</Label>
-        <Input id="serviceAreas" placeholder="78701, 78702" autoComplete="off" {...register('serviceAreas')} />
+        <Input id="serviceAreas" name="serviceAreas" placeholder="78701, 78702" autoComplete="off" {...register('serviceAreas')} />
         {errors.serviceAreas ? (
           <p className="text-xs text-destructive">{String(errors.serviceAreas.message ?? '')}</p>
         ) : null}
@@ -229,37 +229,37 @@ function AcceptHomeownerInvite({
     <form className="space-y-4" onSubmit={onSubmit}>
       <div>
         <Label>Email</Label>
-        <Input value={email} readOnly autoComplete="email" />
+        <Input value={email} readOnly autoComplete="email" name="email" />
       </div>
       <div>
         <Label htmlFor="password">Set password</Label>
-        <Input id="password" type="password" autoComplete="new-password" {...register('password')} />
+        <Input id="password" name="password" type="password" autoComplete="new-password" {...register('password')} />
         {errors.password ? <p className="text-xs text-destructive">{errors.password.message}</p> : null}
       </div>
       <div>
         <Label htmlFor="displayName">Display name (optional)</Label>
-        <Input id="displayName" autoComplete="nickname" {...register('displayName')} />
+        <Input id="displayName" name="displayName" autoComplete="nickname" {...register('displayName')} />
       </div>
       <div>
         <Label htmlFor="address">Address</Label>
-        <Input id="address" autoComplete="street-address" {...register('address')} />
+        <Input id="address" name="address" autoComplete="street-address" {...register('address')} />
         {errors.address ? <p className="text-xs text-destructive">{errors.address.message}</p> : null}
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="city">City</Label>
-          <Input id="city" autoComplete="address-level2" {...register('city')} />
+          <Input id="city" name="city" autoComplete="address-level2" {...register('city')} />
           {errors.city ? <p className="text-xs text-destructive">{errors.city.message}</p> : null}
         </div>
         <div>
           <Label htmlFor="state">State</Label>
-          <Input id="state" maxLength={2} autoComplete="address-level1" {...register('state')} />
+          <Input id="state" name="state" maxLength={2} autoComplete="address-level1" {...register('state')} />
           {errors.state ? <p className="text-xs text-destructive">{errors.state.message}</p> : null}
         </div>
       </div>
       <div>
         <Label htmlFor="zip">ZIP</Label>
-        <Input id="zip" autoComplete="postal-code" {...register('zip')} />
+        <Input id="zip" name="zip" autoComplete="postal-code" {...register('zip')} />
         {errors.zip ? <p className="text-xs text-destructive">{errors.zip.message}</p> : null}
       </div>
       <Button type="submit" disabled={isSubmitting || mutation.isPending}>

@@ -137,7 +137,7 @@ export default function ProfilePage() {
       <form className="space-y-4" onSubmit={onSubmit}>
         <div>
           <Label htmlFor="avatarUrl">Avatar URL</Label>
-          <Input id="avatarUrl" placeholder="https://" autoComplete="url" {...register('avatarUrl')} />
+          <Input id="avatarUrl" name="avatarUrl" placeholder="https://" autoComplete="url" {...register('avatarUrl')} />
           {errors.avatarUrl ? <p className="text-xs text-destructive">{String(errors.avatarUrl?.message ?? '')}</p> : null}
         </div>
         <div>
@@ -149,12 +149,12 @@ export default function ProfilePage() {
           <>
             <div>
               <Label htmlFor="companyName">Company name</Label>
-              <Input id="companyName" autoComplete="organization" {...register('companyName')} />
+              <Input id="companyName" name="companyName" autoComplete="organization" {...register('companyName')} />
               {errors.companyName ? <p className="text-xs text-destructive">{String(errors.companyName?.message ?? '')}</p> : null}
             </div>
             <div>
               <Label htmlFor="serviceAreas">Service ZIPs</Label>
-              <Input id="serviceAreas" placeholder="78701, 78702" autoComplete="off" {...register('serviceAreas')} />
+              <Input id="serviceAreas" name="serviceAreas" placeholder="78701, 78702" autoComplete="off" {...register('serviceAreas')} />
               <p className="mt-1 text-xs text-slate-500">Separate ZIP codes with commas.</p>
             </div>
           </>
@@ -162,7 +162,7 @@ export default function ProfilePage() {
           <>
             <div>
               <Label htmlFor="displayName">Display name</Label>
-              <Input id="displayName" autoComplete="nickname" {...register('displayName')} />
+              <Input id="displayName" name="displayName" autoComplete="nickname" {...register('displayName')} />
             </div>
             <div className="flex items-center gap-2">
               <input
