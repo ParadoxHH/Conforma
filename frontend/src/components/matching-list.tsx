@@ -40,7 +40,8 @@ export function MatchingList({ matches }: MatchingListProps) {
                 {match.contractor.companyName ?? 'Contractor'}
               </h4>
               <div className="mt-1 text-xs uppercase text-slate-400">
-                {match.contractor.subscriptionTier} • Rating {match.contractor.ratingAvg.toFixed(1)} ({match.contractor.ratingCount})
+                {match.contractor.subscriptionTier} - Rating {match.contractor.ratingAvg.toFixed(1)} (
+                {match.contractor.ratingCount})
               </div>
             </div>
             <div className="text-right text-xs text-slate-500">

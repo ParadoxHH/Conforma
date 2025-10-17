@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -83,7 +83,7 @@ export default function BillingDashboard() {
 
         <div className="mt-6 grid gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-6 md:grid-cols-3">
           {summaryLoading ? (
-            <p className="text-sm text-slate-500">Loading subscription status…</p>
+            <p className="text-sm text-slate-500">Loading subscription status...</p>
           ) : summaryError || !summary ? (
             <p className="text-sm text-rose-500">Unable to load billing summary.</p>
           ) : (
@@ -101,7 +101,7 @@ export default function BillingDashboard() {
                   {summary.renewalAt ? new Date(summary.renewalAt).toLocaleDateString() : 'Not scheduled'}
                 </p>
                 <p className="mt-2 text-xs text-slate-500">
-                  Platform fee: {(summary.platformFeeBps / 100).toFixed(2)}% • Instant payout fee:{' '}
+                  Platform fee: {(summary.platformFeeBps / 100).toFixed(2)}% - Instant payout fee:{' '}
                   {(summary.instantPayoutFeeBps / 100).toFixed(2)}%
                 </p>
               </div>
@@ -133,7 +133,7 @@ export default function BillingDashboard() {
         </p>
         <div className="mt-6">
           {plansLoading ? (
-            <p className="text-sm text-slate-500">Loading pricing…</p>
+            <p className="text-sm text-slate-500">Loading pricing...</p>
           ) : plansError || !plans ? (
             <p className="text-sm text-rose-500">Unable to load plan catalog.</p>
           ) : (

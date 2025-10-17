@@ -21,7 +21,8 @@ export function ExportButton({ from, to, filename = 'accounting-export.csv' }: E
     setLoading(true);
     setError(null);
     try {
-      const url = new URL('exports/accounting.csv', API_BASE_URL.endsWith('/') ? API_BASE_URL : ${API_BASE_URL}/);
+      const base = API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
+      const url = new URL('exports/accounting.csv', base);
       if (from) {
         url.searchParams.set('from', from.toISOString());
       }
@@ -32,12 +33,12 @@ export function ExportButton({ from, to, filename = 'accounting-export.csv' }: E
       const token = getAuthToken();
       const response = await fetch(url.toString(), {
         headers: {
-          ...(token ? { Authorization: Bearer  } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
       if (!response.ok) {
-        throw new Error('Export failed.');
+        throw new Error('Export failed');
       }
 
       const blob = await response.blob();
@@ -47,8 +48,8 @@ export function ExportButton({ from, to, filename = 'accounting-export.csv' }: E
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (e: any) {
-      setError(e.message ?? 'Unable to download export');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unable to download export');
     } finally {
       setLoading(false);
     }

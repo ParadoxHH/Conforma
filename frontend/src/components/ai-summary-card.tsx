@@ -16,20 +16,21 @@ const suggestionCopy: Record<AiSummaryCardProps['suggestion'], { label: string; 
 
 export function AiSummaryCard({ summary, suggestion, confidence, modelInfo }: AiSummaryCardProps) {
   const display = suggestionCopy[suggestion];
-  const formattedConfidence = typeof confidence === 'number' ? ${Math.round(confidence * 100)}% confidence : null;
-  const provider = typeof modelInfo?.provider === 'string' ? String(modelInfo?.provider) : 'AI assistant';
+  const formattedConfidence =
+    typeof confidence === 'number' ? `${Math.round(confidence * 100)}% confidence` : null;
+  const provider = typeof modelInfo?.provider === 'string' ? String(modelInfo.provider) : 'AI assistant';
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
-        <span className={ounded-full px-3 py-1 text-xs font-semibold uppercase }>
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${display.color}`}>
           {display.label}
         </span>
         <span className="text-xs uppercase text-slate-400">{provider}</span>
       </div>
       <p className="mt-4 text-sm leading-relaxed text-slate-700">{summary}</p>
       <div className="mt-4 text-xs text-slate-500">
-        {formattedConfidence ? formattedConfidence : 'Confidence unavailable'}
+        {formattedConfidence ?? 'Confidence unavailable'}
       </div>
     </div>
   );
