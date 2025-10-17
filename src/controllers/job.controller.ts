@@ -2,8 +2,10 @@ import { Request, Response } from 'express';
 import { Role } from '@prisma/client';
 import * as jobService from '../services/job.service';
 import prisma from '../lib/prisma';
+import { appConfig } from '../config/app.config';
 import * as escrowService from '../services/escrow.service';
-import * as notificationService from '../services/notification.service';
+import \* as notificationService from '../services/notification.service';
+import { getJobFees as getJobFeesService } from '../services/payout.service';
 
 export const createJob = async (req: Request, res: Response) => {
   try {
@@ -84,5 +86,66 @@ export const getJobById = async (req: Request, res: Response) => {
     res.status(200).json(job);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching job' });
+  }
+};
+export const getJobFees = async (req: Request, res: Response) => {
+  try {
+    const { user: currentUser } = req as Request & { user?: { id?: string; role?: Role } };
+    if (!currentUser?.id || !currentUser.role) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const breakdown = await getJobFeesService(req.params.id, currentUser.id, currentUser.role, prisma);
+    res.status(200).json(breakdown);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+export const updateJobState = async (req: Request, res: Response) => {
+  const { user: currentUser } = req as Request & { user?: { id?: string; role?: Role } };
+
+  if (!currentUser?.id || currentUser.role !== Role.ADMIN) {
+    return res.status(403).json({ message: 'Only admins can modify job state.' });
+  }
+
+  const { stateCode } = req.body ?? {};
+  if (!stateCode || typeof stateCode !== 'string') {
+    return res.status(400).json({ message: 'stateCode is required.' });
+  }
+
+  const normalizedState = stateCode.toUpperCase();
+  if (!appConfig.allowedStates.includes(normalizedState)) {
+    return res.status(400).json({ message: State  is not currently supported. });
+  }
+
+  const existingJob = await prisma.job.findUnique({
+    where: { id: req.params.id },
+    select: { stateCode: true },
+  });
+
+  if (!existingJob) {
+    return res.status(404).json({ message: 'Job not found.' });
+  }
+
+  try {
+    await jobService.refreshJobFees(req.params.id, normalizedState, prisma);
+
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: currentUser.id,
+        entity: 'Job',
+        entityId: req.params.id,
+        action: 'STATE_OVERRIDE',
+        metadata: {
+          fromState: existingJob.stateCode,
+          toState: normalizedState,
+        },
+      },
+    });
+
+    const updatedJob = await jobService.getJobById(req.params.id, prisma);
+    res.status(200).json(updatedJob);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Unable to update job state', error: error.message });
   }
 };

@@ -1,0 +1,2 @@
+﻿'use client';
+export { default } from '@/app/referrals/page';

@@ -333,6 +333,292 @@ paths:
               $ref: '#/components/schemas/MarkNotificationsRead'
       responses:
         '200': { description: Notifications updated }
+  /billing/plans:
+    get:
+      summary: List billing plans
+      tags: [Billing]
+      responses:
+        ''200'':
+          description: Available billing plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: ''#/components/schemas/BillingPlan''
+  /billing/subscribe:
+    post:
+      summary: Subscribe to a billing plan
+      tags: [Billing]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan]
+              properties:
+                plan:
+                  type: string
+                  enum: [PRO, VERIFIED]
+      responses:
+        ''200'': { description: Subscription updated }
+  /billing/me:
+    get:
+      summary: Get billing summary
+      tags: [Billing]
+      security:
+        - bearerAuth: []
+      responses:
+        ''200'':
+          description: Current billing summary
+          content:
+            application/json:
+              schema:
+                $ref: ''#/components/schemas/BillingSummary''
+  /jobs/{id}/fees:
+    get:
+      summary: Get job fee breakdown
+      tags: [Jobs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        ''200'':
+          description: Fee breakdown for the job
+          content:
+            application/json:
+              schema:
+                $ref: ''#/components/schemas/FeeBreakdown''
+  /jobs/{id}/state:
+    put:
+      summary: Override job state configuration
+      tags: [Jobs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stateCode]
+              properties:
+                stateCode:
+                  type: string
+                  minLength: 2
+                  maxLength: 2
+      responses:
+        ''200'': { description: Job state updated }
+  /payouts/me:
+    get:
+      summary: List payouts for the current contractor
+      tags: [Payouts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [PENDING, SENT, SETTLED, FAILED] }
+      responses:
+        ''200'':
+          description: Payout list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: ''#/components/schemas/Payout''
+  /payouts/{jobId}/instant:
+    post:
+      summary: Trigger an instant payout for a job
+      tags: [Payouts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        ''201'': { description: Instant payout request accepted }
+  /ai/disputes/{id}:
+    get:
+      summary: Retrieve AI dispute summary
+      tags: [AI]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        ''200'':
+          description: Latest AI triage summary
+          content:
+            application/json:
+              schema:
+                $ref: ''#/components/schemas/AiDisputeSummary''
+  /ai/disputes/{id}/triage:
+    post:
+      summary: Generate AI triage for a dispute
+      tags: [AI]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        ''201'': { description: AI triage created }
+  /match/contractors:
+    get:
+      summary: Recommend contractors for a project
+      tags: [Search]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: trade
+          schema: { type: string }
+        - in: query
+          name: zip
+          schema: { type: string }
+        - in: query
+          name: budget
+          schema: { type: number }
+      responses:
+        ''200'':
+          description: Matching contractors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: ''#/components/schemas/MatchingContractor''
+  /analytics/contractor:
+    get:
+      summary: Contractor analytics
+      tags: [Analytics]
+      security:
+        - bearerAuth: []
+      responses:
+        ''200'':
+          description: Contractor analytics summary
+          content:
+            application/json:
+              schema:
+                $ref: ''#/components/schemas/ContractorAnalytics''
+  /analytics/homeowner:
+    get:
+      summary: Homeowner analytics
+      tags: [Analytics]
+      security:
+        - bearerAuth: []
+      responses:
+        ''200'':
+          description: Homeowner analytics summary
+          content:
+            application/json:
+              schema:
+                $ref: ''#/components/schemas/HomeownerAnalytics''
+  /analytics/admin:
+    get:
+      summary: Platform analytics overview
+      tags: [Analytics]
+      security:
+        - bearerAuth: []
+      responses:
+        ''200'':
+          description: Platform analytics data
+          content:
+            application/json:
+              schema:
+                $ref: ''#/components/schemas/AdminAnalytics''
+  /exports/accounting.csv:
+    get:
+      summary: Download accounting export CSV
+      tags: [Exports]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+      responses:
+        ''200'': { description: CSV export stream }
+  /config/states:
+    get:
+      summary: List state configuration rules
+      tags: [Config]
+      responses:
+        ''200'':
+          description: State configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: ''#/components/schemas/StateRule''
+  /referrals/me:
+    get:
+      summary: Get referral summary for current user
+      tags: [Referrals]
+      security:
+        - bearerAuth: []
+      responses:
+        ''200'':
+          description: Referral profile
+          content:
+            application/json:
+              schema:
+                $ref: ''#/components/schemas/ReferralSummary''
+  /referrals/redeem:
+    post:
+      summary: Redeem a referral code
+      tags: [Referrals]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string }
+      responses:
+        ''200'': { description: Code redeemed }
+  /disputes/{id}:
+    get:
+      summary: Get dispute details
+      tags: [Disputes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        ''200'': { description: Dispute with milestone context }
 components:
   securitySchemes:
     bearerAuth:
@@ -456,3 +742,148 @@ components:
         ids:
           type: array
           items: { type: string }
+
+    BillingPlan:
+      type: object
+      properties:
+        tier: { type: string, enum: [FREE, PRO, VERIFIED] }
+        name: { type: string }
+        priceMonthly: { type: number }
+        badge: { type: string, nullable: true }
+        description: { type: string }
+        features:
+          type: array
+          items: { type: string }
+        perks:
+          type: array
+          items: { type: string }
+        instantPayoutIncluded: { type: boolean }
+        highlight: { type: boolean }
+    BillingSummary:
+      type: object
+      properties:
+        tier: { type: string }
+        status: { type: string }
+        renewalAt: { type: string, format: date-time, nullable: true }
+        instantPayoutEnabled: { type: boolean }
+        instantPayoutEligible: { type: boolean }
+        platformFeeBps: { type: integer }
+        instantPayoutFeeBps: { type: integer }
+        stripeCustomerPortalUrl: { type: string, format: uri, nullable: true }
+        stripeSubscriptionId: { type: string, nullable: true }
+    FeeBreakdown:
+      type: object
+      properties:
+        platformFee: { type: number }
+        escrowFees: { type: number }
+        instantPayoutFee: { type: number }
+        totalFees: { type: number }
+        netPayout: { type: number }
+        currency: { type: string }
+    Payout:
+      type: object
+      properties:
+        id: { type: string }
+        jobId: { type: string }
+        contractorId: { type: string }
+        amount: { type: integer, description: 'Amount in cents' }
+        type: { type: string, enum: [STANDARD, INSTANT] }
+        status: { type: string, enum: [PENDING, SENT, SETTLED, FAILED] }
+        processorRef: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+    AiDisputeSummary:
+      type: object
+      properties:
+        summary: { type: string }
+        suggestion: { type: string, enum: [PARTIAL_RELEASE, PARTIAL_REFUND, RESUBMIT, UNSURE] }
+        confidence: { type: number, format: float, nullable: true }
+        modelInfo: { type: object }
+    MatchingContractor:
+      type: object
+      properties:
+        contractorId: { type: string }
+        score: { type: number }
+        reasons:
+          type: array
+          items: { type: string }
+        distanceMiles: { type: number, nullable: true }
+        contractor:
+          type: object
+          properties:
+            companyName: { type: string, nullable: true }
+            ratingAvg: { type: number }
+            ratingCount: { type: integer }
+            subscriptionTier: { type: string }
+            verified: { type: boolean }
+            serviceAreas:
+              type: array
+              items: { type: string }
+            instantPayoutEnabled: { type: boolean }
+    ContractorAnalytics:
+      type: object
+      properties:
+        jobsWonPercentage: { type: number }
+        disputesRate: { type: number }
+        averagePayoutDays: { type: number }
+        revenueNetOfFees: { type: number }
+        instantPayoutUsage: { type: number }
+        totals:
+          type: object
+          properties:
+            totalJobs: { type: integer }
+            completedJobs: { type: integer }
+            disputedJobs: { type: integer }
+            payouts: { type: integer }
+    HomeownerAnalytics:
+      type: object
+      properties:
+        totalSpend: { type: number }
+        averageCompletionDays: { type: number }
+        approvalRate: { type: number }
+        disputeRate: { type: number }
+        totals:
+          type: object
+          properties:
+            jobs: { type: integer }
+            milestones: { type: integer }
+            approvedMilestones: { type: integer }
+            disputedMilestones: { type: integer }
+    AdminAnalytics:
+      type: object
+      properties:
+        mrr: { type: number }
+        churnRate: { type: number }
+        arpu: { type: number }
+        feeRevenue: { type: number }
+        instantPayoutRevenue: { type: number }
+        disputeSlaHours: { type: number }
+        totals:
+          type: object
+          properties:
+            activeContractors: { type: integer }
+            churnedContractors: { type: integer }
+            jobs: { type: integer }
+            disputes: { type: integer }
+    StateRule:
+      type: object
+      properties:
+        code: { type: string }
+        name: { type: string }
+        reviewWindows:
+          type: object
+          properties:
+            midMilestoneDays: { type: integer }
+            finalMilestoneDays: { type: integer }
+        platformFeeCapBps: { type: integer, nullable: true }
+        kycRequirement: { type: string }
+    ReferralSummary:
+      type: object
+      properties:
+        code: { type: string }
+        referredByCode: { type: string, nullable: true }
+        stats:
+          type: object
+          properties:
+            signups: { type: integer }
+            firstFundedJobs: { type: integer }
+            credits: { type: integer }

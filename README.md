@@ -23,16 +23,15 @@ This repository contains the full monorepo for the Conforma application, includi
 *   **Animations:** Framer Motion
 *   **Data Fetching:** React Query + Axios
 
-## Phase 2 Highlights
+## Phase 3 Highlights
 
-* **Profiles:** `/dashboard/profile` now manages avatars, bios, trades, aliases, and service areas.
-* **Contractor discovery:** `/contractors` delivers rich filters (trade, ZIP radius, verified badges), ratings, and invite CTAs.
-* **Invites:** Authenticated users invite non-members directly from contractor profiles. Invitees finish onboarding at `/invitations/[token]`.
-* **Messaging:** Job-scoped chat threads live at `/dashboard/messages/[jobId]` with read receipts and notification hooks.
-* **Ratings & reviews:** Homeowners review completed jobs; contractors see aggregated feedback under `/dashboard/reviews`.
-* **Verification badges:** Contractors upload license/insurance docs at `/dashboard/verification`; admins triage in `/admin/verification`.
-* **Notifications:** A header bell surfaces invite, message, review, and verification updates in real time.
-
+* **Monetization ready:** Stripe-backed subscriptions at /pricing and /dashboard/billing, configurable platform fees, and tier-adjusted instant payout pricing.
+* **Instant payout workflows:** Contractors request /dashboard/payouts instant transfers with transparent fee breakdowns from /api/jobs/{id}/fees.
+* **AI dispute triage:** Admins trigger /ai/disputes/:id/triage to summarize evidence, with summaries rendered in /admin/disputes/[id].
+* **Smart matching:** Project creation uses /match/contractors to surface verified, high-response contractors in /create-project.
+* **Role dashboards:** /dashboard/analytics and /admin/analytics visualize revenue, SLA, and spend; CSV exports ship from /exports/accounting.csv.
+* **Multi-state expansion:** /config/states governs review windows and fee caps for TX/OK/LA, with admin overrides via /jobs/{id}/state.
+* **Referrals and credits:** /dashboard/referrals tracks codes, credits, and redemptions that auto-apply during plan upgrades.
 ## Getting Started
 
 ### Prerequisites
@@ -78,15 +77,13 @@ This repository contains the full monorepo for the Conforma application, includi
     *   The frontend will be running at `http://localhost:3000`.
 
 ### Local Feature Tour
-
-1. **Seed sample data** with `npx prisma db seed` to create demo homeowners, contractors, jobs, and verification docs.
-2. **Search contractors** at `/contractors`, apply filters, and open public profiles.
-3. **Send an invite** from a contractor profile. Copy the tokenized link and open it in a fresh session to complete onboarding via `/invitations/[token]`.
-4. **Message the team** by visiting `/dashboard/messages/<jobId>` as a job participant.
-5. **Submit a review** for any completed job from `/dashboard/reviews`.
-6. **Upload license/insurance** at `/dashboard/verification` and approve/reject from `/admin/verification`.
-7. **Check notifications** via the bell iconâ€"new invites, messages, reviews, and document decisions appear instantly.
-
+1. **Explore pricing** at /pricing to review Free/Pro/Verified tiers and feature breakdowns.
+2. **Manage billing** from /dashboard/billing: upgrade with referral credits, open Stripe portal links, and confirm instant payout eligibility.
+3. **Test instant payout** via /dashboard/payouts; trigger /payouts/{jobId}/instant and inspect /api/jobs/{id}/fees for breakdowns.
+4. **Try smart matching** on /create-project to load /match/contractors recommendations tailored to trade, ZIP, and budget.
+5. **Run AI triage** by visiting /admin/disputes/[id] and pressing “Run AI triage” to populate suggestions from /ai/disputes/:id/triage.
+6. **Review analytics** on /dashboard/analytics and /admin/analytics, then download the CSV export via /exports/accounting.csv.
+7. **Share referrals** at /dashboard/referrals and redeem a code to watch credits auto-apply on plan upgrades.
 ## Deployment
 
 The backend is configured for deployment on **Render**, and the frontend is configured for **Vercel**.
@@ -117,6 +114,16 @@ The backend is configured for deployment on **Render**, and the frontend is conf
 | `FILE_UPLOAD_BASE_URL` | Base URL for document upload links (defaults to `https://uploads.conforma.com`). |
 | `FILE_CDN_BASE_URL` | Public CDN base for uploaded docs (defaults to `https://cdn.conforma.com`). |
 | `FRONTEND_URL` | Used in invite emails to build acceptance links. |
+| `STRIPE_SECRET` | Stripe secret key for plan activation and invoicing. |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret. |
+| `STRIPE_PRICE_PRO`, `STRIPE_PRICE_VERIFIED` | Stripe price IDs mapped to Pro/Verified plans. |
+| `PLATFORM_FEE_BPS` | Default platform fee in basis points (e.g., `150`). |
+| `INSTANT_PAYOUT_ENABLED` | Toggle instant payout feature (`true`/`false`). |
+| `INSTANT_PAYOUT_FEE_BPS` | Instant payout fee tier in basis points (e.g., `100`). |
+| `AI_TRIAGE_ENABLED` | Enable AI dispute triage (`true`/`false`). |
+| `AI_PROVIDER`, `AI_API_KEY` | AI vendor identifier (e.g., `openai`) and API key. |
+| `ALLOWED_STATES` | Comma-delimited state codes Conforma operates in (e.g., `TX,OK,LA`). |
+| `ACCOUNTING_EXPORT_CURRENCY` | Currency code for accounting exports (defaults to `USD`). |
 
 Frontend `.env.local` must include `NEXT_PUBLIC_API_BASE_URL`.
 
@@ -134,3 +141,8 @@ npm run test:e2e   # requires `npm run dev` in another terminal
 ```
 
 Vitest suites cover invites, contractor search filtering, and review aggregation. The frontend lint pass keeps the new React Query surfaces healthy.
+
+
+
+
+

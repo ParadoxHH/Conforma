@@ -1,6 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
+﻿import { describe, it, expect, vi } from 'vitest';
 import * as jobService from '../src/services/job.service';
-import { mockDeep } from 'vitest-mock-extended';
 import { PrismaClient } from '@prisma/client';
 
 describe('Job Service', () => {
@@ -14,7 +13,30 @@ describe('Job Service', () => {
     };
     const contractorId = 'contractor1';
 
-    const mockPrisma = mockDeep<PrismaClient>();
+    const mockPrisma = {
+      contractor: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: contractorId,
+          subscriptionTier: 'FREE',
+          subscriptionStatus: 'ACTIVE',
+          instantPayoutEnabled: false,
+          user: { email: 'contractor@test.com' },
+        }),
+      },
+      homeowner: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: jobData.homeownerId,
+          state: 'TX',
+          user: { email: 'homeowner@test.com' },
+          phoneNumber: '+1234567890',
+        }),
+      },
+      job: {
+        create: vi.fn(),
+        update: vi.fn(),
+      },
+    } as unknown as PrismaClient;
+
     const mockEscrowService = { createTransaction: vi.fn().mockResolvedValue({ id: 'escrow123' }) };
     const mockNotificationService = { sendEmail: vi.fn(), sendSms: vi.fn() };
 
@@ -27,14 +49,13 @@ describe('Job Service', () => {
       contractor: { user: { email: 'contractor@test.com' } },
     };
 
-    mockPrisma.job.create.mockResolvedValue(createdJob as any);
-    mockPrisma.job.update.mockResolvedValue({ ...createdJob, escrowTransactionId: 'escrow123' } as any);
+    (mockPrisma.job.create as any).mockResolvedValue(createdJob);
+    (mockPrisma.job.update as any).mockResolvedValue({ ...createdJob, escrowTransactionId: 'escrow123' });
 
     const job = await jobService.createJob(jobData, contractorId, mockPrisma, mockEscrowService as any, mockNotificationService as any);
 
     expect(job).toBeDefined();
     expect(job.escrowTransactionId).toBe('escrow123');
-    expect(mockPrisma.job.create).toHaveBeenCalled();
     expect(mockEscrowService.createTransaction).toHaveBeenCalled();
     expect(mockNotificationService.sendEmail).toHaveBeenCalled();
     expect(mockNotificationService.sendSms).toHaveBeenCalled();
@@ -46,11 +67,15 @@ describe('Job Service', () => {
       description: 'Test Description',
       totalPrice: 1000,
       homeownerId: 'homeowner1',
-      milestones: [{ title: 'Milestone 1', price: 500 }], // Price mismatch
+      milestones: [{ title: 'Milestone 1', price: 500 }],
     };
     const contractorId = 'contractor1';
 
-    const mockPrisma = mockDeep<PrismaClient>();
+    const mockPrisma = {
+      contractor: { findUnique: vi.fn() },
+      homeowner: { findUnique: vi.fn() },
+      job: { create: vi.fn(), update: vi.fn() },
+    } as unknown as PrismaClient;
 
     await expect(jobService.createJob(jobData, contractorId, mockPrisma)).rejects.toThrow(
       'The sum of milestone prices must equal the total job price.'

@@ -1,4 +1,20 @@
-﻿import { PrismaClient, Prisma, Role, Trade, InviteRole, InviteStatus, DocumentType, DocumentStatus } from '@prisma/client';
+import {
+  PrismaClient,
+  Prisma,
+  Role,
+  Trade,
+  InviteRole,
+  InviteStatus,
+  DocumentType,
+  DocumentStatus,
+  SubscriptionTier,
+  SubscriptionStatus,
+  PayoutType,
+  PayoutStatus,
+  AiDisputeSuggestion,
+  AnalyticsSnapshotKind,
+  ReferralEventType,
+} from '@prisma/client';
 import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
@@ -8,6 +24,10 @@ async function main() {
 
   const password = 'password123';
   const hashedPassword = await argon2.hash(password);
+  const generateReferralCode = (prefix: string) =>
+    `${prefix}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+  const adminReferralCode = generateReferralCode('ADMIN');
 
   // Create Admin
   const admin = await prisma.user.create({
@@ -17,9 +37,12 @@ async function main() {
       role: 'ADMIN',
       avatarUrl: 'https://images.conforma.com/avatars/admin.png',
       bio: 'Head of escrow operations for Conforma.',
+      referralCode: adminReferralCode,
     },
   });
   console.log('Created admin user:', admin.email);
+
+  const homeownerReferralCode = generateReferralCode('HOME');
 
   // Create Homeowner
   const homeownerUser = await prisma.user.create({
@@ -29,6 +52,8 @@ async function main() {
       role: 'HOMEOWNER',
       avatarUrl: 'https://images.conforma.com/avatars/homeowner.png',
       bio: 'Austin homeowner renovating a 1950s bungalow.',
+      referralCode: homeownerReferralCode,
+      referredByCode: adminReferralCode,
     },
   });
 
@@ -46,6 +71,8 @@ async function main() {
   });
   console.log('Created homeowner:', homeownerUser.email);
 
+  const contractorReferralCode = generateReferralCode('PRO');
+
   // Create Contractor
   const contractorUser = await prisma.user.create({
     data: {
@@ -54,6 +81,8 @@ async function main() {
       role: 'CONTRACTOR',
       avatarUrl: 'https://images.conforma.com/avatars/contractor.png',
       bio: 'Texas roofing contractor focused on residential re-roofs.',
+      referralCode: contractorReferralCode,
+      referredByCode: homeownerReferralCode,
     },
   });
 
@@ -71,6 +100,12 @@ async function main() {
       verifiedKyc: true,
       verifiedLicense: true,
       verifiedInsurance: true,
+      subscriptionTier: SubscriptionTier.VERIFIED,
+      subscriptionStatus: SubscriptionStatus.ACTIVE,
+      instantPayoutEnabled: true,
+      stripeCustomerId: 'cus_seed_verified',
+      stripeSubscriptionId: 'sub_seed_verified',
+      subscriptionRenewalAt: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
     },
   });
   console.log('Created contractor:', contractorUser.email);
@@ -93,6 +128,12 @@ async function main() {
     ],
   });
 
+  const jobFeeBreakdown: Prisma.JsonObject = {
+    platformFee: 150,
+    escrowFees: 90,
+    instantPayoutFee: 0,
+  };
+
   // Create Job
   const job = await prisma.job.create({
     data: {
@@ -102,9 +143,28 @@ async function main() {
       homeownerId: homeowner.id,
       contractorId: contractor.id,
       status: 'COMPLETED',
+      platformFeeBps: 150,
+      feeAmounts: jobFeeBreakdown,
+      stateCode: 'TX',
     },
   });
   console.log('Created job:', job.title);
+
+  await prisma.payout.create({
+    data: {
+      jobId: job.id,
+      contractorId: contractor.id,
+      amount: 985000,
+      type: PayoutType.STANDARD,
+      status: PayoutStatus.SETTLED,
+      processorRef: 'po_standard_seed',
+      metadata: {
+        channel: 'ACH',
+        bank: 'Seed Credit Union',
+        settledAt: new Date().toISOString(),
+      },
+    },
+  });
 
   // Create Milestones
   const milestone1 = await prisma.milestone.create({
@@ -121,7 +181,7 @@ async function main() {
       jobId: job.id,
       title: 'Milestone 2: Labor - Half Complete',
       price: 3000.0,
-      status: 'PENDING',
+      status: 'DISPUTED',
     },
   });
 
@@ -131,6 +191,30 @@ async function main() {
       title: 'Milestone 3: Project Completion',
       price: 3000.0,
       status: 'PENDING',
+    },
+  });
+
+  const dispute = await prisma.dispute.create({
+    data: {
+      milestoneId: milestone2.id,
+      reasonText: 'Homeowner requested additional photographic evidence before release.',
+      status: 'OPEN',
+      resolutionNotes: null,
+    },
+  });
+
+  await prisma.aiDisputeSummary.create({
+    data: {
+      disputeId: dispute.id,
+      summary:
+        'Materials delivered late by one day; homeowner requests partial refund of delivery costs but accepts workmanship.',
+      suggestion: AiDisputeSuggestion.PARTIAL_REFUND,
+      confidence: new Prisma.Decimal('0.78'),
+      modelInfo: {
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+        temperature: 0.2,
+      } as Prisma.JsonObject,
     },
   });
 
@@ -192,6 +276,8 @@ async function main() {
   });
 
   // Additional contractor for search variety
+  const solarReferralCode = generateReferralCode('SOLAR');
+
   const solarUser = await prisma.user.create({
     data: {
       email: 'solar@test.com',
@@ -199,6 +285,8 @@ async function main() {
       role: Role.CONTRACTOR,
       avatarUrl: 'https://images.conforma.com/avatars/solar.png',
       bio: 'Solar installer focused on Austin and San Antonio.',
+      referralCode: solarReferralCode,
+      referredByCode: contractorReferralCode,
     },
   });
 
@@ -217,8 +305,20 @@ async function main() {
       verifiedInsurance: true,
       ratingAvg: 4.5,
       ratingCount: 12,
+      subscriptionTier: SubscriptionTier.PRO,
+      subscriptionStatus: SubscriptionStatus.PAST_DUE,
+      instantPayoutEnabled: false,
+      stripeCustomerId: 'cus_seed_solar',
+      stripeSubscriptionId: 'sub_seed_solar',
+      subscriptionRenewalAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
     },
   });
+
+  const solarFeeBreakdown: Prisma.JsonObject = {
+    platformFee: 67.5,
+    escrowFees: 45,
+    instantPayoutFee: 22.5,
+  };
 
   const solarJob = await prisma.job.create({
     data: {
@@ -228,6 +328,24 @@ async function main() {
       homeownerId: homeowner.id,
       contractorId: solarContractor.id,
       status: 'COMPLETED',
+      platformFeeBps: 175,
+      feeAmounts: solarFeeBreakdown,
+      stateCode: 'TX',
+    },
+  });
+
+  await prisma.payout.create({
+    data: {
+      jobId: solarJob.id,
+      contractorId: solarContractor.id,
+      amount: 380000,
+      type: PayoutType.INSTANT,
+      status: PayoutStatus.SENT,
+      processorRef: 'po_instant_seed',
+      metadata: {
+        method: 'instant_transfer',
+        submittedAt: new Date().toISOString(),
+      },
     },
   });
 
@@ -247,6 +365,82 @@ async function main() {
       ratingAvg: 4.7,
       ratingCount: 13,
     },
+  });
+
+  const now = new Date();
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+
+  await prisma.analyticsSnapshot.createMany({
+    data: [
+      {
+        kind: AnalyticsSnapshotKind.CONTRACTOR,
+        userId: contractorUser.id,
+        periodStart: thirtyDaysAgo,
+        periodEnd: now,
+        payload: {
+          jobsWon: 6,
+          jobsLost: 2,
+          winRate: 0.75,
+          revenueNetOfFees: 82500,
+          averagePayoutDays: 3,
+          instantPayoutUsage: 0.4,
+          disputesOpened: 1,
+        },
+      },
+      {
+        kind: AnalyticsSnapshotKind.HOMEOWNER,
+        userId: homeownerUser.id,
+        periodStart: thirtyDaysAgo,
+        periodEnd: now,
+        payload: {
+          totalSpend: 14500,
+          approvedMilestones: 5,
+          disputedMilestones: 1,
+          averageCompletionDays: 28,
+          approvalRate: 0.83,
+        },
+      },
+      {
+        kind: AnalyticsSnapshotKind.ADMIN,
+        userId: null,
+        periodStart: ninetyDaysAgo,
+        periodEnd: now,
+        payload: {
+          mrr: 12400,
+          arpu: 185,
+          churnRate: 0.06,
+          feeRevenue: 32100,
+          instantPayoutRevenue: 2800,
+          disputeSlaHours: 26,
+        },
+      },
+    ],
+  });
+
+  await prisma.referralEvent.createMany({
+    data: [
+      {
+        referrerUserId: homeownerUser.id,
+        referredUserId: contractorUser.id,
+        event: ReferralEventType.SIGNED_UP,
+      },
+      {
+        referrerUserId: homeownerUser.id,
+        referredUserId: contractorUser.id,
+        event: ReferralEventType.FIRST_FUNDED_JOB,
+      },
+      {
+        referrerUserId: contractorUser.id,
+        referredUserId: solarUser.id,
+        event: ReferralEventType.SIGNED_UP,
+      },
+      {
+        referrerUserId: contractorUser.id,
+        referredUserId: solarUser.id,
+        event: ReferralEventType.FIRST_FUNDED_JOB,
+      },
+    ],
   });
 
   console.log('Seeded additional contractor data including solar contractor.');

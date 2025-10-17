@@ -24,6 +24,11 @@ model User {
   uploadedFiles   EvidenceFile[]
   documents       Document[]
   messages        Message[]       @relation("MessageSender")
+  referralCode    String?         @unique
+  referredByCode  String?
+  referralsCreated ReferralEvent[] @relation("ReferrerEvents")
+  referralsReceived ReferralEvent[] @relation("ReferredEvents")
+  analyticsSnapshots AnalyticsSnapshot[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 }
@@ -45,8 +50,16 @@ model Contractor {
   ratingCount     Int      @default(0)
   jobs            Job[]
   reviews         Review[]
+  subscriptionTier   SubscriptionTier   @default(FREE)
+  subscriptionStatus SubscriptionStatus @default(ACTIVE)
+  instantPayoutEnabled Boolean          @default(false)
+  stripeCustomerId    String?           @unique
+  stripeSubscriptionId String?
+  subscriptionRenewalAt DateTime?
+  payouts         Payout[]
 
   @@index([verifiedKyc, verifiedLicense, verifiedInsurance, ratingAvg], map: "contractor_verification_rating_idx")
+  @@index([subscriptionTier, subscriptionStatus], map: "contractor_subscription_idx")
 }
 
 model Homeowner {
@@ -75,10 +88,14 @@ model Job {
   totalPrice          Float
   status              JobStatus   @default(PENDING)
   escrowTransactionId String?
+  platformFeeBps      Int         @default(150)
+  feeAmounts          Json?
+  stateCode           String      @default("TX") @db.Char(2)
   milestones          Milestone[]
   messages            Message[]
   invites             Invite[]
   reviews             Review[]
+  payouts             Payout[]
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
 }
@@ -117,6 +134,7 @@ model Dispute {
   reasonText      String
   status          String
   resolutionNotes String?
+  aiSummary       AiDisputeSummary?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -210,6 +228,60 @@ model Document {
   @@index([status], map: "document_status_idx")
 }
 
+model Payout {
+  id             String         @id @default(cuid())
+  job            Job            @relation(fields: [jobId], references: [id])
+  jobId          String
+  contractor     Contractor     @relation(fields: [contractorId], references: [id])
+  contractorId   String
+  amount         Int
+  type           PayoutType
+  status         PayoutStatus   @default(PENDING)
+  processorRef   String?        @unique
+  metadata       Json?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([jobId, status], map: "payout_job_status_idx")
+  @@index([contractorId, status], map: "payout_contractor_status_idx")
+}
+
+model AiDisputeSummary {
+  id          String              @id @default(cuid())
+  dispute     Dispute             @relation(fields: [disputeId], references: [id])
+  disputeId   String              @unique
+  summary     String
+  suggestion  AiDisputeSuggestion
+  confidence  Decimal?            @db.Decimal(5, 4)
+  modelInfo   Json?
+  createdAt   DateTime            @default(now())
+}
+
+model AnalyticsSnapshot {
+  id          String                  @id @default(cuid())
+  kind        AnalyticsSnapshotKind
+  user        User?                   @relation(fields: [userId], references: [id])
+  userId      String?
+  periodStart DateTime
+  periodEnd   DateTime
+  payload     Json
+  createdAt   DateTime                @default(now())
+
+  @@index([kind, userId, periodStart], map: "analytics_kind_user_period_idx")
+}
+
+model ReferralEvent {
+  id               String             @id @default(cuid())
+  referrerUser     User               @relation("ReferrerEvents", fields: [referrerUserId], references: [id])
+  referrerUserId   String
+  referredUser     User?              @relation("ReferredEvents", fields: [referredUserId], references: [id])
+  referredUserId   String?
+  event            ReferralEventType
+  createdAt        DateTime           @default(now())
+
+  @@index([referrerUserId, event], map: "referral_referrer_event_idx")
+}
+
 enum Role {
   ADMIN
   CONTRACTOR
@@ -262,4 +334,46 @@ enum DocumentStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  VERIFIED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+enum PayoutType {
+  STANDARD
+  INSTANT
+}
+
+enum PayoutStatus {
+  PENDING
+  SENT
+  SETTLED
+  FAILED
+}
+
+enum AiDisputeSuggestion {
+  PARTIAL_RELEASE
+  PARTIAL_REFUND
+  RESUBMIT
+  UNSURE
+}
+
+enum AnalyticsSnapshotKind {
+  CONTRACTOR
+  HOMEOWNER
+  ADMIN
+}
+
+enum ReferralEventType {
+  SIGNED_UP
+  FIRST_FUNDED_JOB
 }

@@ -62,6 +62,60 @@ router.get('/', jobController.getJobs);
 
 /**
  * @openapi
+ * /api/jobs/{id}/state:
+ *   put:
+ *     summary: Admin override job state configuration
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               stateCode:
+ *                 type: string
+ *                 example: TX
+ *     responses:
+ *       200:
+ *         description: Updated job with new state rules
+ *       403:
+ *         description: Forbidden
+ */
+router.put('/:id/state', jobController.updateJobState);
+
+/**
+ * @openapi
+ * /api/jobs/{id}/fees:
+ *   get:
+ *     summary: Get job fee breakdown
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Fee breakdown
+ *       403:
+ *         description: Not allowed
+ */
+router.get('/:id/fees', jobController.getJobFees);
+
+/**
+ * @openapi
  * /api/jobs/{id}:
  *   get:
  *     summary: Get a job by its ID

@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
@@ -16,6 +16,14 @@ import searchRoutes from './routes/search.routes';
 import inviteRoutes from './routes/invite.routes';
 import documentRoutes from './routes/document.routes';
 import notificationRoutes from './routes/notification.routes';
+import billingRoutes from './routes/billing.routes';
+import payoutRoutes from './routes/payout.routes';
+import matchRoutes from './routes/match.routes';
+import aiRoutes from './routes/ai.routes';
+import configRoutes from './routes/config.routes';
+import analyticsRoutes from './routes/analytics.routes';
+import exportRoutes from './routes/export.routes';
+import referralRoutes from './routes/referral.routes';
 import { startMilestoneApprover } from './jobs/milestone-approver';
 import { startInviteExpiryJob } from './jobs/invite-expirer.job';
 import { startContractorSearchSyncJob } from './jobs/search-sync.job';
@@ -48,7 +56,15 @@ app.use(
     optionsSuccessStatus: 200,
   }),
 );
-app.use(express.json());
+const jsonParser = express.json();
+const stripeWebhookParser = express.raw({ type: 'application/json' });
+
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith('/api/webhooks/stripe')) {
+    return stripeWebhookParser(req, res, next);
+  }
+  return jsonParser(req, res, next);
+});
 
 // --- API Documentation ---
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -66,6 +82,14 @@ app.use('/api/profiles', profileRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/invites', inviteRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/api/payouts', payoutRoutes);
+app.use('/api/match', matchRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/config', configRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/exports', exportRoutes);
+app.use('/api/referrals', referralRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 app.get('/', (req, res) => {
