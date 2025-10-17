@@ -17,20 +17,17 @@ type Payout = {
   updatedAt?: string;
 };
 
-const fetchPayouts = async (status?: string): Promise<Payout[]> => {
-  return apiClient.get<Payout[]>('/payouts/me', {
+const fetchPayouts = async (status?: string): Promise<Payout[]> =>
+  apiClient.get('/payouts/me', {
     query: status && status !== 'ALL' ? { status } : undefined,
   });
-};
 
-const triggerInstantPayout = async (jobId: string) => {
-  return apiClient.post(/payouts//instant);
-};
+const createInstantPayout = async (jobId: string) => apiClient.post(`/payouts/${jobId}/instant`);
 
-const statuses = ['ALL', 'PENDING', 'SENT', 'SETTLED', 'FAILED'] as const;
+const STATUSES = ['ALL', 'PENDING', 'SENT', 'SETTLED', 'FAILED'] as const;
 
 export default function PayoutsDashboard() {
-  const [statusFilter, setStatusFilter] = useState<(typeof statuses)[number]>('ALL');
+  const [statusFilter, setStatusFilter] = useState<(typeof STATUSES)[number]>('ALL');
   const queryClient = useQueryClient();
 
   const payoutsQuery = useQuery({
@@ -38,11 +35,9 @@ export default function PayoutsDashboard() {
     queryFn: () => fetchPayouts(statusFilter),
   });
 
-  const mutation = useMutation({
-    mutationFn: triggerInstantPayout,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payouts'] });
-    },
+  const instantPayoutMutation = useMutation({
+    mutationFn: createInstantPayout,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['payouts'] }),
   });
 
   return (
@@ -53,21 +48,26 @@ export default function PayoutsDashboard() {
           Track Conforma disbursements and trigger instant payouts once jobs are approved.
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-2">
-          {statuses.map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={ounded-full px-4 py-1 text-xs font-semibold uppercase transition }
-            >
-              {status.toLowerCase()}
-            </button>
-          ))}
+          {STATUSES.map((status) => {
+            const isActive = statusFilter === status;
+            return (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`rounded-full px-4 py-1 text-xs font-semibold uppercase transition ${
+                  isActive ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {status.toLowerCase()}
+              </button>
+            );
+          })}
         </div>
       </section>
 
       <section className="space-y-4">
         {payoutsQuery.isLoading ? (
-          <p className="text-sm text-slate-500">Loading payouts…</p>
+          <p className="text-sm text-slate-500">Loading payoutsâ€¦</p>
         ) : payoutsQuery.isError ? (
           <p className="text-sm text-rose-500">Unable to load payout history.</p>
         ) : payoutsQuery.data && payoutsQuery.data.length > 0 ? (
@@ -82,8 +82,10 @@ export default function PayoutsDashboard() {
         <p className="mt-2 text-sm text-slate-600">
           Instant payout is available for completed jobs if your subscription tier includes it. Enter a job ID to request it manually.
         </p>
-        <InstantPayoutRequest onSubmit={(jobId) => mutation.mutate(jobId)} loading={mutation.isPending} />
-        {mutation.isError ? <p className="mt-2 text-sm text-rose-500">{(mutation.error as Error).message}</p> : null}
+        <InstantPayoutRequest onSubmit={(jobId) => instantPayoutMutation.mutate(jobId)} loading={instantPayoutMutation.isPending} />
+        {instantPayoutMutation.isError ? (
+          <p className="mt-2 text-sm text-rose-500">{(instantPayoutMutation.error as Error).message}</p>
+        ) : null}
       </section>
     </div>
   );
@@ -115,7 +117,7 @@ function InstantPayoutRequest({ onSubmit, loading }: InstantPayoutRequestProps) 
         onChange={(event) => setJobId(event.target.value)}
       />
       <Button type="submit" disabled={loading}>
-        {loading ? 'Submitting…' : 'Trigger Instant Payout'}
+        {loading ? 'Submittingâ€¦' : 'Trigger Instant Payout'}
       </Button>
     </form>
   );

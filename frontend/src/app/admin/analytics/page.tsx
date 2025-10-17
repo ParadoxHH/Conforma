@@ -24,8 +24,11 @@ type AdminAnalytics = {
 
 const fetchAdminAnalytics = async (): Promise<AdminAnalytics> => apiClient.get('/analytics/admin');
 
+const currencyFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+
 export default function AdminAnalyticsPage() {
   const { user } = useAuth();
+
   const analyticsQuery = useQuery({
     queryKey: ['admin-analytics'],
     queryFn: fetchAdminAnalytics,
@@ -33,8 +36,7 @@ export default function AdminAnalyticsPage() {
   });
 
   const data = analyticsQuery.data;
-
-  const timeline = data
+  const revenueSeries = data
     ? [
         { label: 'MRR', value: data.mrr },
         { label: 'Fee Revenue', value: data.feeRevenue },
@@ -53,20 +55,20 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {analyticsQuery.isLoading ? (
-        <p className="text-sm text-slate-500">Loading admin analytics…</p>
+        <p className="text-sm text-slate-500">Loading admin analyticsâ€¦</p>
       ) : analyticsQuery.isError || !data ? (
         <p className="text-sm text-rose-500">Unable to load admin dashboard.</p>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
           <ChartCard
             title="Monthly Recurring Revenue"
-            value={$}
-            helperText={${data.totals.activeContractors} active contractors}
+            value={currencyFormatter.format(data.mrr)}
+            helperText={`${data.totals.activeContractors} active contractors`}
             trendLabel="Churn"
-            trendValue={${Math.round(data.churnRate * 100)}%}
+            trendValue={`${Math.round(data.churnRate * 100)}%`}
           >
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={timeline}>
+              <AreaChart data={revenueSeries}>
                 <defs>
                   <linearGradient id="colorMrr" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.8} />
@@ -75,17 +77,17 @@ export default function AdminAnalyticsPage() {
                 </defs>
                 <XAxis dataKey="label" hide />
                 <YAxis hide />
-                <Tooltip formatter={(value: number) => $} />
+                <Tooltip formatter={(value: number) => currencyFormatter.format(value)} />
                 <Area type="monotone" dataKey="value" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorMrr)" />
               </AreaChart>
             </ResponsiveContainer>
           </ChartCard>
           <ChartCard
             title="Fee Performance"
-            value={$}
-            helperText={Instant payout fees {Math.round(data.instantPayoutRevenue).toLocaleString()}}
+            value={currencyFormatter.format(data.feeRevenue)}
+            helperText={`Instant payout fees ${currencyFormatter.format(data.instantPayoutRevenue)}`}
             trendLabel="Avg Dispute SLA"
-            trendValue={${data.disputeSlaHours.toFixed(1)} hrs}
+            trendValue={`${data.disputeSlaHours.toFixed(1)} hrs`}
           >
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={[
@@ -100,7 +102,7 @@ export default function AdminAnalyticsPage() {
                 </defs>
                 <XAxis dataKey="label" hide />
                 <YAxis hide />
-                <Tooltip formatter={(value: number) => $} />
+                <Tooltip formatter={(value: number) => currencyFormatter.format(value)} />
                 <Area type="monotone" dataKey="value" stroke="#a855f7" fillOpacity={1} fill="url(#colorFees)" />
               </AreaChart>
             </ResponsiveContainer>

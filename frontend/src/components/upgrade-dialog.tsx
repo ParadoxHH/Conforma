@@ -5,6 +5,11 @@ import { Check, Loader2, X } from 'lucide-react';
 import { PricingPlan } from './pricing-table';
 import { Button } from './ui/button';
 
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+
 type UpgradeDialogProps = {
   open: boolean;
   plan: PricingPlan | null;
@@ -40,7 +45,7 @@ export function UpgradeDialog({ open, plan, isLoading, checkoutUrl, onConfirm, o
             </div>
 
             <p className="mt-6 text-3xl font-semibold text-slate-900">
-              {plan.priceMonthly === 0 ? 'Free' : $}
+              {plan.priceMonthly === 0 ? 'Free' : currencyFormatter.format(plan.priceMonthly)}
               {plan.priceMonthly > 0 && <span className="ml-1 text-base font-normal text-slate-500">/month</span>}
             </p>
 
@@ -65,7 +70,7 @@ export function UpgradeDialog({ open, plan, isLoading, checkoutUrl, onConfirm, o
                 </Button>
               ) : (
                 <Button onClick={() => onConfirm(plan)} disabled={isLoading}>
-                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : Activate }
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : `Activate ${plan.name}`}
                 </Button>
               )}
             </div>

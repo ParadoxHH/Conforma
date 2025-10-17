@@ -61,3 +61,4 @@ export function ReferralCard({ summary }: ReferralCardProps) {
     </div>
   );
 }
+

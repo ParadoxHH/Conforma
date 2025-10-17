@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
@@ -6,7 +6,26 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import { useAuth } from '@/components/auth-context';
 
-const baseLinks = [\n  { href: '/dashboard/profile', label: 'Profile' },\n  { href: '/dashboard/messages', label: 'Messages' },\n  { href: '/dashboard/reviews', label: 'Reviews' },\n  { href: '/dashboard/verification', label: 'Verification' },\n];\n\nconst contractorExtras = [\n  { href: '/dashboard/billing', label: 'Billing' },\n  { href: '/dashboard/payouts', label: 'Payouts' },\n  { href: '/dashboard/analytics', label: 'Analytics' },\n  { href: '/dashboard/referrals', label: 'Referrals' },\n];\n\nconst homeownerExtras = [\n  { href: '/dashboard/analytics', label: 'Analytics' },\n  { href: '/dashboard/referrals', label: 'Referrals' },\n];\n\nexport default function DashboardLayout({ children }: { children: React.ReactNode }) {
+const baseLinks = [
+  { href: '/dashboard/profile', label: 'Profile' },
+  { href: '/dashboard/messages', label: 'Messages' },
+  { href: '/dashboard/reviews', label: 'Reviews' },
+  { href: '/dashboard/verification', label: 'Verification' },
+];
+
+const contractorExtras = [
+  { href: '/dashboard/billing', label: 'Billing' },
+  { href: '/dashboard/payouts', label: 'Payouts' },
+  { href: '/dashboard/analytics', label: 'Analytics' },
+  { href: '/dashboard/referrals', label: 'Referrals' },
+];
+
+const homeownerExtras = [
+  { href: '/dashboard/analytics', label: 'Analytics' },
+  { href: '/dashboard/referrals', label: 'Referrals' },
+];
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -18,11 +37,27 @@ const baseLinks = [\n  { href: '/dashboard/profile', label: 'Profile' },\n  { hr
     }
   }, [loading, user, pathname, router]);
 
-  const navLinks = useMemo(() => {\n    if (!user) {\n      return [];\n    }\n\n    if (user.role === 'CONTRACTOR') {\n      return [...baseLinks, ...contractorExtras];\n    }\n\n    if (user.role === 'HOMEOWNER') {\n      return [...baseLinks, ...homeownerExtras];\n    }\n\n    return baseLinks;\n  }, [user]);\n\n  if (!user) {
+  const navLinks = useMemo(() => {
+    if (!user) {
+      return [];
+    }
+
+    if (user.role === 'CONTRACTOR') {
+      return [...baseLinks, ...contractorExtras];
+    }
+
+    if (user.role === 'HOMEOWNER') {
+      return [...baseLinks, ...homeownerExtras];
+    }
+
+    return baseLinks;
+  }, [user]);
+
+  if (!user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center bg-white/80">
         <div className="rounded-3xl border border-slate-200/70 bg-white/90 px-8 py-6 text-sm text-slate-600 shadow-lg shadow-slate-900/10 backdrop-blur">
-          {loading ? 'Loading your dashboard...' : 'Redirecting you to login...'}
+          {loading ? 'Loading your dashboard…' : 'Redirecting you to login…'}
         </div>
       </div>
     );
@@ -60,6 +95,3 @@ const baseLinks = [\n  { href: '/dashboard/profile', label: 'Profile' },\n  { hr
     </div>
   );
 }
-
-
-

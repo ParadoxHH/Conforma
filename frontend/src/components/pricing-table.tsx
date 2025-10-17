@@ -94,3 +94,4 @@ export function PricingTable({ plans, currentTier, onSelectPlan }: PricingTableP
     </div>
   );
 }
+

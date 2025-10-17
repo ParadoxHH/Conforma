@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -101,3 +101,4 @@ export default function CreateProjectPage() {
     </div>
   );
 }
+

@@ -26,3 +26,4 @@ export function PlanBadge({ tier, className }: PlanBadgeProps) {
     </span>
   );
 }
+

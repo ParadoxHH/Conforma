@@ -1,4 +1,4 @@
-﻿import { Suspense } from 'react';
+import { Suspense } from 'react';
 
 import { ContractorSearchView } from './search-view';
 

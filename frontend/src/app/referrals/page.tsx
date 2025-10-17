@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -68,3 +68,4 @@ export default function ReferralsPage() {
     </div>
   );
 }
+

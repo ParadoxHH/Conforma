@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -23,8 +23,8 @@ type Dispute = {
 type AiSummary = {
   summary: string;
   suggestion: 'PARTIAL_RELEASE' | 'PARTIAL_REFUND' | 'RESUBMIT' | 'UNSURE';
-  confidence?: number | string | null;
-  modelInfo?: Record<string, unknown>;
+  confidence?: number | null;
+  modelInfo?: Record<string, unknown> | null;
 };
 
 const fetchDispute = async (id: string): Promise<Dispute> => apiClient.get(`/disputes/${id}`);
@@ -48,11 +48,9 @@ export default function AdminDisputeDetail() {
     enabled: Boolean(disputeId),
   });
 
-  const mutation = useMutation({
+  const triageMutation = useMutation({
     mutationFn: () => runAiTriage(disputeId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ai-dispute', disputeId] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ai-dispute', disputeId] }),
   });
 
   return (
@@ -83,8 +81,8 @@ export default function AdminDisputeDetail() {
       )}
 
       <div className="flex items-center gap-3">
-        <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-          {mutation.isPending ? 'Generating summary…' : 'Run AI triage'}
+        <Button onClick={() => triageMutation.mutate()} disabled={triageMutation.isPending}>
+          {triageMutation.isPending ? 'Generating summary…' : 'Run AI triage'}
         </Button>
       </div>
 
@@ -96,8 +94,8 @@ export default function AdminDisputeDetail() {
         <AiSummaryCard
           summary={summaryQuery.data.summary}
           suggestion={summaryQuery.data.suggestion}
-          confidence={typeof summaryQuery.data.confidence === 'number' ? summaryQuery.data.confidence : Number(summaryQuery.data.confidence ?? 0.6)}
-          modelInfo={summaryQuery.data.modelInfo}
+          confidence={summaryQuery.data.confidence ?? null}
+          modelInfo={summaryQuery.data.modelInfo ?? null}
         />
       )}
     </div>

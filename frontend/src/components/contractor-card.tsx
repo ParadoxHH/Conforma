@@ -1,4 +1,4 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 
 import { ContractorSummary } from '@/types/contractor';
 import { BadgeRow } from '@/components/badge-row';

@@ -18,13 +18,13 @@ export default function PricingPage() {
       <div className="text-center">
         <h1 className="text-4xl font-semibold text-slate-900">Pricing built for growing contractors</h1>
         <p className="mt-4 text-slate-600">
-          Conforma’s tiers keep escrow in motion—from core payouts to instant transfer unlocks.
+          Conformaâ€™s tiers keep escrow in motionâ€”from core payouts to instant transfer unlocks.
         </p>
       </div>
 
       <div className="mt-12">
         {isLoading ? (
-          <p className="text-center text-sm text-slate-500">Loading plans…</p>
+          <p className="text-center text-sm text-slate-500">Loading plansâ€¦</p>
         ) : isError || !plans ? (
           <p className="text-center text-sm text-rose-500">Unable to load plans right now.</p>
         ) : (
@@ -40,3 +40,4 @@ export default function PricingPage() {
     </div>
   );
 }
+

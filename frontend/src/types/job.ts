@@ -1,4 +1,4 @@
-﻿export type JobSummary = {
+export type JobSummary = {
   id: string;
   title: string;
   status: string;

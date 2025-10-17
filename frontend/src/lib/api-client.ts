@@ -62,6 +62,8 @@ export const apiClient = {
     apiFetch<T>(path, { ...options, method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
 };
 
-export const setAuthToken = (token: string | null) => {\n  authToken = token;\n};\n\nexport const getAuthToken = () => authToken;| null) => {
+export const setAuthToken = (token: string | null) => {
   authToken = token;
 };
+
+export const getAuthToken = () => authToken;

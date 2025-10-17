@@ -33,3 +33,4 @@ export function ChartCard({ title, value, helperText, trendLabel, trendValue, cl
     </div>
   );
 }
+
