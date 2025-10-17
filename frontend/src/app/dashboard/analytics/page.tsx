@@ -35,8 +35,10 @@ type HomeownerAnalytics = {
   };
 };
 
-const fetchContractorAnalytics = async (): Promise<ContractorAnalytics> => apiClient.get('/analytics/contractor');
-const fetchHomeownerAnalytics = async (): Promise<HomeownerAnalytics> => apiClient.get('/analytics/homeowner');
+const fetchContractorAnalytics = async (): Promise<ContractorAnalytics> =>
+  apiClient.get<ContractorAnalytics>('/analytics/contractor');
+const fetchHomeownerAnalytics = async (): Promise<HomeownerAnalytics> =>
+  apiClient.get<HomeownerAnalytics>('/analytics/homeowner');
 
 const COLORS = ['#0ea5e9', '#a855f7'];
 const currencyFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -45,9 +47,9 @@ export default function AnalyticsDashboard() {
   const { user } = useAuth();
   const isContractor = user?.role === 'CONTRACTOR';
 
-  const analyticsQuery = useQuery({
+  const analyticsQuery = useQuery<ContractorAnalytics | HomeownerAnalytics>({
     queryKey: ['analytics', user?.role],
-    queryFn: isContractor ? fetchContractorAnalytics : fetchHomeownerAnalytics,
+    queryFn: () => (isContractor ? fetchContractorAnalytics() : fetchHomeownerAnalytics()),
     enabled: Boolean(user),
   });
 

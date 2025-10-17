@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -49,7 +49,7 @@ export default function CreateProjectPage() {
     <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-semibold text-slate-900">Create a new project</h1>
-        <p className="mt-2 text-sm text-slate-600">Tell us about the scope and weâ€™ll pre-match vetted contractors.</p>
+        <p className="mt-2 text-sm text-slate-600">Tell us about the scope and we'll pre-match vetted contractors.</p>
 
         <form
           className="mt-6 space-y-4"
