@@ -15,7 +15,7 @@ function Hero() {
   const { t } = useTranslation();
 
   const stats = [
-    { label: t('home.stats.secured'), value: 92, prefix: '$', suffix: 'M+' },
+    { label: t('home.stats.secured'), value: 92, prefix: '$', suffix: 'M+' } as const,
     { label: t('home.stats.releaseTime'), value: 48, suffix: ' hrs' },
     { label: t('home.stats.milestones'), value: 3200, suffix: '+' },
   ] as const;
@@ -60,7 +60,7 @@ function Hero() {
                     {stat.label}
                   </p>
                   <p className="mt-2 text-2xl font-semibold text-slate-900">
-                    <StatsCounter value={stat.value} prefix={stat.prefix} suffix={stat.suffix} />
+                    <StatsCounter value={stat.value} prefix={('prefix' in stat ? stat.prefix : undefined)} suffix={('suffix' in stat ? stat.suffix : undefined)} />
                   </p>
                 </div>
               ))}
@@ -213,3 +213,5 @@ export default function Home() {
     </main>
   );
 }
+
+
