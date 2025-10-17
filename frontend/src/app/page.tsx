@@ -2,7 +2,6 @@ import { FeatureTabs } from "@/components/feature-tabs";
 import { ScrollLinkedStepper } from "@/components/scroll-linked-stepper";
 import { TestimonialCarousel } from "@/components/testimonial-carousel";
 import { FAQAccordion } from "@/components/faq-accordion";
-import { LeadForm } from "@/components/lead-form";
 import { FloatingHelp } from "@/components/floating-help";
 import { TrustBadgeRow } from "@/components/trust-badge-row";
 import { StatsCounter } from "@/components/stats-counter";
@@ -179,15 +178,6 @@ export default function Home() {
       <section className="bg-section-muted py-16 md:py-24">
         <div className="container px-4 md:px-6">
           <FAQAccordion />
-        </div>
-      </section>
-      <section className="bg-white py-16 md:py-24">
-        <div className="container px-4 md:px-6 text-center">
-          <h2 className="mb-4 text-3xl font-bold text-slate-900">Let's make your next project safe and simple.</h2>
-          <p className="mx-auto mb-8 max-w-2xl text-slate-600">
-            Have questions or need help getting started? Fill out the form below and a member of our team will get back to you shortly.
-          </p>
-          <LeadForm />
         </div>
       </section>
       <FloatingHelp />
