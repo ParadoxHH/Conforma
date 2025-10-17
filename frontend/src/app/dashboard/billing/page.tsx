@@ -5,7 +5,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PricingPlan, PricingTable } from '@/components/pricing-table';
 import { UpgradeDialog } from '@/components/upgrade-dialog';
 import { apiClient } from '@/lib/api-client';
-import { Badge } from '@/components/ui/badge';
 
 type BillingSummary = {
   tier: 'FREE' | 'PRO' | 'VERIFIED';
