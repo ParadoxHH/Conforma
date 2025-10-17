@@ -1,0 +1,162 @@
+{
+  "common": {
+    "brand": "Conforma",
+    "nav": {
+      "howItWorks": "How It Works",
+      "homeowners": "For Homeowners",
+      "contractors": "For Contractors",
+      "blog": "Blog"
+    },
+    "actions": {
+      "login": "Login",
+      "createAccount": "Create an account",
+      "accessConforma": "Access Conforma",
+      "logout": "Log out",
+      "dashboard": "Dashboard"
+    },
+    "language": {
+      "label": "Language",
+      "english": "English",
+      "spanish": "Español"
+    },
+    "footer": {
+      "copyright": "© 2024 Conforma. All rights reserved.",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "badge": "Texas-Only"
+    }
+  },
+  "home": {
+    "hero": {
+      "tagline": "Licensed escrow • Texas projects only",
+      "title": "Pay-When-Done for Texas Home Projects",
+      "subtitle": "Funds are held safely in escrow. Contractors get paid only when you approve each milestone."
+    },
+    "stats": {
+      "secured": "Secured through Conforma",
+      "releaseTime": "Average release time",
+      "milestones": "Milestones paid out"
+    },
+    "cta": {
+      "login": "Login",
+      "createAccount": "Create an account"
+    },
+    "useCases": {
+      "title": "Texas projects we secure every week",
+      "subtitle": "Durable escrow templates tailored for the most common home improvement milestones across the state.",
+      "items": {
+        "roofing": "Roofing",
+        "homeImprovement": "Home Improvement",
+        "moving": "Moving",
+        "solar": "Solar",
+        "treeTrimming": "Tree Trimming"
+      }
+    },
+    "dualHero": {
+      "title": "Built for both sides of the project",
+      "description": "Tailored workflows for homeowners who demand certainty and contractors who value predictable cash flow."
+    },
+    "insights": {
+      "title": "Need help shaping the plan for your next project?",
+      "description": "Conforma analysts will review your scope, recommend milestone evidence, and configure escrow in a single session.",
+      "action": "Talk to Conforma"
+    }
+  },
+  "featureTabs": {
+    "tabs": {
+      "homeowners": "For Homeowners",
+      "contractors": "For Contractors"
+    },
+    "homeowners": [
+      "Pay only when work is done to your satisfaction.",
+      "Securely hold funds in a licensed escrow account.",
+      "Clear audit trail for all milestones and payments.",
+      "Simple dispute resolution process."
+    ],
+    "contractors": [
+      "Guaranteed payment upon milestone approval.",
+      "Reduce administrative overhead and payment chasing.",
+      "Build trust with clients through a transparent process.",
+      "Get paid faster with automated fund release."
+    ]
+  },
+  "howItWorks": {
+    "hero": {
+      "eyebrow": "The Conforma playbook",
+      "title": "From scope to final payout, see escrow in action",
+      "description": "Our licensed team guides every step so Texas homeowners and contractors stay aligned, funded, and on schedule.",
+      "action": "Launch your project"
+    },
+    "overview": [
+      {
+        "title": "Set expectations up front",
+        "description": "Scope, milestone language, and documentation requirements are confirmed before funds move."
+      },
+      {
+        "title": "Track proof of progress",
+        "description": "Contractors submit evidence in-app, and homeowners approve or request updates with context."
+      },
+      {
+        "title": "Release or resolve quickly",
+        "description": "Funds are wired within hours of approval, or paused while Conforma facilitates a solution."
+      }
+    ],
+    "milestones": {
+      "title": "Milestones at work",
+      "description": "This interactive view walks through each stage of the Conforma escrow process, from initial deposit to the final punch list."
+    },
+    "timeline": {
+      "title": "A transparent timeline",
+      "description": "Every Conforma project follows a regulated cadence. Hover over each milestone to see what evidence is required before funds move."
+    },
+    "highlights": {
+      "title": "What to expect from the Conforma team",
+      "description": "We stay close to every project with friendly check-ins, compliance expertise, and fast answers when you need them.",
+      "items": [
+        {
+          "title": "Project kickoff call",
+          "description": "A Conforma specialist reviews the contract with both parties, aligns on milestones, and confirms inspection requirements."
+        },
+        {
+          "title": "Evidence checklist",
+          "description": "Each milestone has clear photo, document, or permit expectations so everyone knows what approval requires."
+        },
+        {
+          "title": "Escrow ledger",
+          "description": "Releases and change orders are timestamped in a shared ledger that can be exported for insurance or lender records."
+        },
+        {
+          "title": "Dispute path",
+          "description": "If there is a disagreement, Conforma coordinates documentation review and, when needed, brings in licensed mediators."
+        }
+      ]
+    },
+    "cta": {
+      "text": "Ready to see Conforma in action? Register to set up your escrow workspace — our team will follow up once your milestones are in place."
+    }
+  },
+  "blog": {
+    "hero": {
+      "eyebrow": "Insights",
+      "title": "Expert guidance for every project milestone",
+      "description": "Templates, playbooks, and lessons from the Conforma escrow team to keep Texas residential projects transparent.",
+      "primary": "Create your escrow",
+      "secondary": "Talk with our team"
+    },
+    "categoryCard": {
+      "focus": "Focus area",
+      "description": "Articles curated for {{category}} teams."
+    },
+    "featured": {
+      "readFull": "Read the full analysis"
+    },
+    "card": {
+      "readMore": "Read more"
+    },
+    "cta": {
+      "title": "Need help shaping the plan for your next project?",
+      "description": "Conforma analysts will review your scope, recommend milestone evidence, and configure escrow in a single session.",
+      "action": "Talk to Conforma"
+    }
+  }
+}

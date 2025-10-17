@@ -1,18 +1,24 @@
-import { FeatureTabs } from "@/components/feature-tabs";
-import { ScrollLinkedStepper } from "@/components/scroll-linked-stepper";
-import { TestimonialCarousel } from "@/components/testimonial-carousel";
-import { FAQAccordion } from "@/components/faq-accordion";
-import { FloatingHelp } from "@/components/floating-help";
-import { TrustBadgeRow } from "@/components/trust-badge-row";
-import { StatsCounter } from "@/components/stats-counter";
-import Link from "next/link";
+'use client';
+
+import Link from 'next/link';
+
+import { FeatureTabs } from '@/components/feature-tabs';
+import { ScrollLinkedStepper } from '@/components/scroll-linked-stepper';
+import { TestimonialCarousel } from '@/components/testimonial-carousel';
+import { FAQAccordion } from '@/components/faq-accordion';
+import { FloatingHelp } from '@/components/floating-help';
+import { TrustBadgeRow } from '@/components/trust-badge-row';
+import { StatsCounter } from '@/components/stats-counter';
+import { useTranslation } from '@/i18n/translation-context';
 
 function Hero() {
+  const { t } = useTranslation();
+
   const stats = [
-    { label: "Secured through Conforma", value: 92, prefix: "$", suffix: "M+" },
-    { label: "Average release time", value: 48, suffix: " hrs" },
-    { label: "Milestones paid out", value: 3200, suffix: "+" },
-  ];
+    { label: t('home.stats.secured'), value: 92, prefix: '$', suffix: 'M+' },
+    { label: t('home.stats.releaseTime'), value: 48, suffix: ' hrs' },
+    { label: t('home.stats.milestones'), value: 3200, suffix: '+' },
+  ] as const;
 
   return (
     <section className="relative overflow-hidden bg-hero-gradient">
@@ -22,26 +28,26 @@ function Hero() {
         <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-primary shadow-sm ring-1 ring-inset ring-primary/20">
-              Licensed escrow · Texas projects only
+              {t('home.hero.tagline')}
             </span>
             <h1 className="mt-6 text-left text-4xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-5xl md:text-[44px] md:leading-[1.05]">
-              Pay-When-Done for Texas Home Projects
+              {t('home.hero.title')}
             </h1>
             <p className="mt-4 max-w-xl text-left text-lg text-slate-600 md:text-xl">
-              Funds are held safely in escrow. Contractors get paid only when you approve each milestone.
+              {t('home.hero.subtitle')}
             </p>
             <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               <Link
                 href="/login"
                 className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
               >
-                Login
+                {t('home.cta.login')}
               </Link>
               <Link
                 href="/login?mode=signup"
                 className="inline-flex h-12 items-center justify-center rounded-full border border-slate-200/70 bg-white/80 px-8 text-base font-semibold text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/60"
               >
-                Create an account
+                {t('home.cta.createAccount')}
               </Link>
             </div>
             <div className="mt-12 grid gap-4 sm:grid-cols-3">
@@ -124,13 +130,20 @@ function Hero() {
 }
 
 function UseCaseTiles() {
-  const cases = ["Roofing", "Home Improvement", "Moving", "Solar", "Tree Trimming"];
+  const { t } = useTranslation();
+
+  const cases = [
+    t('home.useCases.items.roofing'),
+    t('home.useCases.items.homeImprovement'),
+    t('home.useCases.items.moving'),
+    t('home.useCases.items.solar'),
+    t('home.useCases.items.treeTrimming'),
+  ];
+
   return (
     <div className="container px-4 md:px-6">
-      <h2 className="text-3xl font-bold text-center text-slate-900">Texas projects we secure every week</h2>
-      <p className="mt-3 text-center text-base text-slate-600">
-        Durable escrow templates tailored for the most common home improvement milestones across the state.
-      </p>
+      <h2 className="text-3xl font-bold text-center text-slate-900">{t('home.useCases.title')}</h2>
+      <p className="mt-3 text-center text-base text-slate-600">{t('home.useCases.subtitle')}</p>
       <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
         {cases.map((c) => (
           <div
@@ -146,6 +159,8 @@ function UseCaseTiles() {
 }
 
 export default function Home() {
+  const { t } = useTranslation();
+
   return (
     <main className="flex flex-col gap-0">
       <Hero />
@@ -153,10 +168,8 @@ export default function Home() {
         <div className="container px-4 md:px-6">
           <div className="mx-auto max-w-4xl rounded-3xl border border-slate-200/70 bg-white/80 p-8 shadow-lg shadow-slate-900/5 backdrop-blur">
             <div className="mb-8 text-center">
-              <h2 className="text-3xl font-bold text-slate-900">Built for both sides of the project</h2>
-              <p className="mt-3 text-base text-slate-600">
-                Tailored workflows for homeowners who demand certainty and contractors who value predictable cash flow.
-              </p>
+              <h2 className="text-3xl font-bold text-slate-900">{t('home.dualHero.title')}</h2>
+              <p className="mt-3 text-base text-slate-600">{t('home.dualHero.description')}</p>
             </div>
             <FeatureTabs />
           </div>
@@ -178,6 +191,22 @@ export default function Home() {
       <section className="bg-section-muted py-16 md:py-24">
         <div className="container px-4 md:px-6">
           <FAQAccordion />
+        </div>
+      </section>
+      <section className="bg-section-muted py-16 md:py-24">
+        <div className="container px-4 md:px-6">
+          <div className="surface-card flex flex-col items-start gap-6 rounded-3xl border border-white/60 bg-white/90 p-8 shadow-lg shadow-slate-900/10 backdrop-blur md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-slate-900">{t('home.insights.title')}</h2>
+              <p className="mt-2 max-w-xl text-sm text-slate-600">{t('home.insights.description')}</p>
+            </div>
+            <Link
+              href="/contact"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+            >
+              {t('home.insights.action')}
+            </Link>
+          </div>
         </div>
       </section>
       <FloatingHelp />

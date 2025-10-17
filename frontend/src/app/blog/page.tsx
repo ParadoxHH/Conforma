@@ -1,9 +1,10 @@
+﻿'use client';
+
 import Link from "next/link";
 
 import { PageHero } from "@/components/page-hero";
 import { blogPosts } from "@/lib/blog-posts";
-
-type CardPost = typeof blogPosts[number];
+import { useTranslation } from "@/i18n/translation-context";
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -15,7 +16,9 @@ function formatDate(date: string) {
   return dateFormatter.format(new Date(date));
 }
 
-function FeaturedArticle({ post }: { post: CardPost }) {
+function FeaturedArticle({ post }: { post: typeof blogPosts[number] }) {
+  const { t } = useTranslation();
+
   return (
     <article className="surface-card flex h-full flex-col justify-between gap-6 rounded-3xl border border-white/60 bg-white/90 p-10 shadow-lg shadow-slate-900/10 backdrop-blur">
       <div className="space-y-4">
@@ -37,7 +40,7 @@ function FeaturedArticle({ post }: { post: CardPost }) {
           href={`/blog/${post.slug}`}
           className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80"
         >
-          Read the full analysis
+          {t('blog.featured.readFull')}
           <span aria-hidden>→</span>
         </Link>
       </div>
@@ -45,7 +48,9 @@ function FeaturedArticle({ post }: { post: CardPost }) {
   );
 }
 
-function ArticleCard({ post }: { post: CardPost }) {
+function ArticleCard({ post }: { post: typeof blogPosts[number] }) {
+  const { t } = useTranslation();
+
   return (
     <article className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 shadow-sm shadow-slate-900/5 transition hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/10">
       <span className="inline-flex items-center gap-2 rounded-full bg-primary/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
@@ -63,7 +68,7 @@ function ArticleCard({ post }: { post: CardPost }) {
           href={`/blog/${post.slug}`}
           className="text-sm font-semibold text-primary hover:text-primary/80"
         >
-          Read more
+          {t('blog.card.readMore')}
         </Link>
       </div>
     </article>
@@ -71,6 +76,7 @@ function ArticleCard({ post }: { post: CardPost }) {
 }
 
 export default function Blog() {
+  const { t } = useTranslation();
   const sortedPosts = [...blogPosts].sort(
     (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
   );
@@ -81,13 +87,13 @@ export default function Blog() {
   return (
     <main className="flex flex-col gap-0">
       <PageHero
-        eyebrow="Insights"
-        title="Expert guidance for every project milestone"
-        description="Templates, playbooks, and lessons from the Conforma escrow team to keep Texas residential projects transparent."
+        eyebrow={t('blog.hero.eyebrow')}
+        title={t('blog.hero.title')}
+        description={t('blog.hero.description')}
         align="left"
         actions={[
-          { href: "/register", label: "Create your escrow" },
-          { href: "/contact", label: "Talk with our team", variant: "secondary" },
+          { href: "/register", label: t('blog.hero.primary') },
+          { href: "/contact", label: t('blog.hero.secondary'), variant: "secondary" },
         ]}
       >
         <div className="grid gap-4 sm:grid-cols-3">
@@ -97,11 +103,11 @@ export default function Blog() {
               className="rounded-3xl border border-white/60 bg-white/80 p-4 text-sm shadow-sm shadow-slate-900/5"
             >
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Focus area
+                {t('blog.categoryCard.focus')}
               </p>
               <p className="mt-2 font-semibold text-slate-900">{category}</p>
               <p className="mt-1 text-slate-600">
-                Articles curated for {category.toLowerCase()} teams.
+                {t('blog.categoryCard.description', { category })}
               </p>
             </div>
           ))}
@@ -125,18 +131,14 @@ export default function Blog() {
         <div className="container px-4 md:px-6">
           <div className="surface-card flex flex-col items-start gap-6 rounded-3xl border border-white/60 bg-white/90 p-8 shadow-lg shadow-slate-900/10 backdrop-blur md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-2xl font-semibold text-slate-900">
-                Need help shaping the plan for your next project?
-              </h2>
-              <p className="mt-2 max-w-xl text-sm text-slate-600">
-                Conforma analysts will review your scope, recommend milestone evidence, and configure escrow in a single session.
-              </p>
+              <h2 className="text-2xl font-semibold text-slate-900">{t('blog.cta.title')}</h2>
+              <p className="mt-2 max-w-xl text-sm text-slate-600">{t('blog.cta.description')}</p>
             </div>
             <Link
               href="/contact"
               className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
             >
-              Talk to Conforma
+              {t('blog.cta.action')}
             </Link>
           </div>
         </div>
@@ -144,3 +146,5 @@ export default function Blog() {
     </main>
   );
 }
+
+

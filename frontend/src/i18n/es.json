@@ -1,0 +1,162 @@
+{
+  "common": {
+    "brand": "Conforma",
+    "nav": {
+      "howItWorks": "Cómo funciona",
+      "homeowners": "Para propietarios",
+      "contractors": "Para contratistas",
+      "blog": "Blog"
+    },
+    "actions": {
+      "login": "Iniciar sesión",
+      "createAccount": "Crear una cuenta",
+      "accessConforma": "Entrar a Conforma",
+      "logout": "Cerrar sesión",
+      "dashboard": "Panel"
+    },
+    "language": {
+      "label": "Idioma",
+      "english": "English",
+      "spanish": "Español"
+    },
+    "footer": {
+      "copyright": "© 2024 Conforma. Todos los derechos reservados.",
+      "terms": "Términos del servicio",
+      "privacy": "Aviso de privacidad",
+      "badge": "Sólo Texas"
+    }
+  },
+  "home": {
+    "hero": {
+      "tagline": "Fideicomiso con licencia • Proyectos en Texas",
+      "title": "Paga cuando el trabajo esté terminado",
+      "subtitle": "Los fondos se mantienen seguros en escrow. Los contratistas cobran sólo cuando apruebas cada hito."
+    },
+    "stats": {
+      "secured": "Fondos asegurados con Conforma",
+      "releaseTime": "Tiempo promedio de liberación",
+      "milestones": "Hitos pagados"
+    },
+    "cta": {
+      "login": "Iniciar sesión",
+      "createAccount": "Crear una cuenta"
+    },
+    "useCases": {
+      "title": "Proyectos de Texas que aseguramos cada semana",
+      "subtitle": "Plantillas de escrow resistentes para los trabajos residenciales más comunes en el estado.",
+      "items": {
+        "roofing": "Techos",
+        "homeImprovement": "Mejoras al hogar",
+        "moving": "Mudanzas",
+        "solar": "Sistemas solares",
+        "treeTrimming": "Poda de árboles"
+      }
+    },
+    "dualHero": {
+      "title": "Construido para ambos lados del proyecto",
+      "description": "Flujos de trabajo diseñados para propietarios que exigen certeza y contratistas que valoran un flujo de caja predecible."
+    },
+    "insights": {
+      "title": "¿Necesitas ayuda para planear tu próximo proyecto?",
+      "description": "Los analistas de Conforma revisan tu alcance, recomiendan evidencia para cada hito y configuran el escrow en una sola sesión.",
+      "action": "Habla con Conforma"
+    }
+  },
+  "featureTabs": {
+    "tabs": {
+      "homeowners": "Para propietarios",
+      "contractors": "Para contratistas"
+    },
+    "homeowners": [
+      "Paga sólo cuando el trabajo cumpla con tus expectativas.",
+      "Mantén los fondos en una cuenta de escrow con licencia.",
+      "Registro claro de todos los hitos y pagos.",
+      "Proceso sencillo para resolver disputas."
+    ],
+    "contractors": [
+      "Pago garantizado cuando se aprueba el hito.",
+      "Menos carga administrativa y seguimiento de cobros.",
+      "Genera confianza con un proceso transparente.",
+      "Cobra más rápido con liberaciones automatizadas."
+    ]
+  },
+  "howItWorks": {
+    "hero": {
+      "eyebrow": "El plan de Conforma",
+      "title": "Del alcance al pago final: así funciona el escrow",
+      "description": "Nuestro equipo con licencia guía cada paso para que propietarios y contratistas de Texas se mantengan alineados, financiados y a tiempo.",
+      "action": "Lanza tu proyecto"
+    },
+    "overview": [
+      {
+        "title": "Alinea expectativas desde el inicio",
+        "description": "El alcance, los hitos y la evidencia requerida se confirman antes de mover fondos."
+      },
+      {
+        "title": "Documenta el progreso con pruebas",
+        "description": "Los contratistas suben evidencias en la app y los propietarios aprueban o piden ajustes con contexto."
+      },
+      {
+        "title": "Libera pagos o resuelve rápido",
+        "description": "Los fondos se transfieren horas después de la aprobación o se detienen mientras Conforma facilita la solución."
+      }
+    ],
+    "milestones": {
+      "title": "Hitos en acción",
+      "description": "Esta vista interactiva muestra cada etapa del proceso de escrow de Conforma, desde el depósito inicial hasta la lista final."
+    },
+    "timeline": {
+      "title": "Cronograma transparente",
+      "description": "Cada proyecto sigue un ritmo regulado. Pasa el cursor sobre cada hito para conocer la evidencia necesaria antes de liberar fondos."
+    },
+    "highlights": {
+      "title": "Qué esperar del equipo Conforma",
+      "description": "Acompañamos cada proyecto con seguimientos amistosos, experiencia regulatoria y respuestas rápidas cuando las necesitas.",
+      "items": [
+        {
+          "title": "Llamada de arranque",
+          "description": "Un especialista revisa el contrato con ambas partes, alinea hitos y confirma requisitos de inspección."
+        },
+        {
+          "title": "Lista de evidencia",
+          "description": "Cada hito tiene fotos, documentos o permisos claramente definidos para saber qué se necesita aprobar."
+        },
+        {
+          "title": "Libro mayor de escrow",
+          "description": "Las liberaciones y cambios quedan con fecha y hora en un registro compartido exportable para aseguradoras o prestamistas."
+        },
+        {
+          "title": "Ruta de disputas",
+          "description": "Si surge un desacuerdo, Conforma coordina la revisión de documentación y, si hace falta, integra mediadores con licencia."
+        }
+      ]
+    },
+    "cta": {
+      "text": "¿Listo para ver Conforma en acción? Regístrate para configurar tu espacio de escrow; te contactaremos cuando tus hitos estén listos."
+    }
+  },
+  "blog": {
+    "hero": {
+      "eyebrow": "Ideas",
+      "title": "Guía experta para cada hito del proyecto",
+      "description": "Plantillas, manuales y lecciones del equipo de escrow de Conforma para mantener la transparencia en proyectos residenciales de Texas.",
+      "primary": "Crea tu escrow",
+      "secondary": "Habla con nuestro equipo"
+    },
+    "categoryCard": {
+      "focus": "Área de enfoque",
+      "description": "Artículos seleccionados para equipos de {{category}}."
+    },
+    "featured": {
+      "readFull": "Leer el análisis completo"
+    },
+    "card": {
+      "readMore": "Leer más"
+    },
+    "cta": {
+      "title": "¿Necesitas ayuda para planear tu próximo proyecto?",
+      "description": "Nuestros analistas revisarán tu alcance, recomendarán evidencia por hito y configurarán el escrow en una sola sesión.",
+      "action": "Habla con Conforma"
+    }
+  }
+}

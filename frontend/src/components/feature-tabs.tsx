@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslation } from "@/i18n/translation-context";
 import {
   Tabs,
   TabsContent,
@@ -8,21 +9,12 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 
-const homeownerBenefits = [
-  "Pay only when work is done to your satisfaction.",
-  "Securely hold funds in a licensed escrow account.",
-  "Clear audit trail for all milestones and payments.",
-  "Simple dispute resolution process.",
-];
-
-const contractorBenefits = [
-  "Guaranteed payment upon milestone approval.",
-  "Reduce administrative overhead and payment chasing.",
-  "Build trust with clients through a transparent process.",
-  "Get paid faster with automated fund release.",
-];
-
 export function FeatureTabs() {
+  const { t, get } = useTranslation();
+
+  const homeownerBenefits = get<string[]>("featureTabs.homeowners") ?? [];
+  const contractorBenefits = get<string[]>("featureTabs.contractors") ?? [];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
@@ -32,8 +24,8 @@ export function FeatureTabs() {
     >
       <Tabs defaultValue="homeowners" className="w-full max-w-2xl mx-auto">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="homeowners">For Homeowners</TabsTrigger>
-          <TabsTrigger value="contractors">For Contractors</TabsTrigger>
+          <TabsTrigger value="homeowners">{t("featureTabs.tabs.homeowners")}</TabsTrigger>
+          <TabsTrigger value="contractors">{t("featureTabs.tabs.contractors")}</TabsTrigger>
         </TabsList>
         <TabsContent value="homeowners">
           <ul className="list-disc list-inside space-y-2 p-4">
