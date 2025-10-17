@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { MatchingList } from '@/components/matching-list';
+import { MatchingList, type MatchingContractor } from '@/components/matching-list';
 import { apiClient } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 
-const fetchMatches = async (params: { zip?: string; trade?: string; budget?: number | null }) => {
-  return apiClient.get('/match/contractors', {
+const fetchMatches = async (params: { zip?: string; trade?: string; budget?: number | null }): Promise<MatchingContractor[]> => {
+  return apiClient.get<MatchingContractor[]>('/match/contractors', {
     query: {
       zip: params.zip,
       trade: params.trade,
@@ -21,7 +21,7 @@ export default function CreateProjectPage() {
   const [trade, setTrade] = useState('Roofing');
   const [budget, setBudget] = useState('10000');
 
-  const matchesQuery = useQuery({
+  const matchesQuery = useQuery<MatchingContractor[]>({
     queryKey: ['matching-contractors', zip, trade, budget],
     queryFn: () =>
       fetchMatches({
@@ -31,7 +31,7 @@ export default function CreateProjectPage() {
       }),
   });
 
-  const mutation = useMutation({
+  const mutation = useMutation<MatchingContractor[]>({
     mutationFn: () =>
       fetchMatches({
         zip,
@@ -49,7 +49,7 @@ export default function CreateProjectPage() {
     <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-semibold text-slate-900">Create a new project</h1>
-        <p className="mt-2 text-sm text-slate-600">Tell us about the scope and we’ll pre-match vetted contractors.</p>
+        <p className="mt-2 text-sm text-slate-600">Tell us about the scope and weâ€™ll pre-match vetted contractors.</p>
 
         <form
           className="mt-6 space-y-4"
@@ -83,7 +83,7 @@ export default function CreateProjectPage() {
             />
           </div>
           <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Finding matches…' : 'Refresh matches'}
+            {mutation.isPending ? 'Finding matches...' : 'Refresh matches'}
           </Button>
         </form>
       </div>
@@ -91,7 +91,7 @@ export default function CreateProjectPage() {
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-slate-900">Recommended Contractors</h2>
         {matchesQuery.isLoading ? (
-          <p className="text-sm text-slate-500">Calculating matches…</p>
+          <p className="text-sm text-slate-500">Calculating matches...</p>
         ) : matchesQuery.isError ? (
           <p className="text-sm text-rose-500">Unable to load matches.</p>
         ) : (

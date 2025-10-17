@@ -1,6 +1,6 @@
 'use client';
 
-type MatchingContractor = {
+export type MatchingContractor = {
   contractorId: string;
   score: number;
   reasons: string[];
