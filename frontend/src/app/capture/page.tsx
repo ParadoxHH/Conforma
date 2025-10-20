@@ -10,6 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useEvidenceQueue } from '@/lib/pwa/use-evidence-queue';
 import { EvidenceQueueRecord } from '@/lib/pwa/evidence-store';
 
+type SyncCapableRegistration = ServiceWorkerRegistration & {
+  sync?: {
+    register: (tag: string) => Promise<void>;
+  };
+};
+
 type JobSummary = {
   id: string;
   title: string;
@@ -97,12 +103,14 @@ export default function CapturePage() {
       return;
     }
     const registration = await navigator.serviceWorker.ready;
-    if ('sync' in registration) {
-      try {
-        await registration.sync.register('conforma-evidence-sync');
-      } catch (error) {
-        console.warn('Background sync registration failed', error);
-      }
+    const syncManager = (registration as SyncCapableRegistration).sync;
+    if (!syncManager?.register) {
+      return;
+    }
+    try {
+      await syncManager.register('conforma-evidence-sync');
+    } catch (error) {
+      console.warn('Background sync registration failed', error);
     }
   }, []);
 
