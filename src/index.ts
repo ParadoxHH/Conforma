@@ -25,10 +25,13 @@ import configRoutes from './routes/config.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import exportRoutes from './routes/export.routes';
 import referralRoutes from './routes/referral.routes';
+import autonomyRoutes from './routes/autonomy.routes';
 import { startMilestoneApprover } from './jobs/milestone-approver';
 import { startInviteExpiryJob } from './jobs/invite-expirer.job';
 import { startContractorSearchSyncJob } from './jobs/search-sync.job';
 import { startDocumentExpiryJob } from './jobs/document-expirer.job';
+import { startWeeklyDigestJob } from './jobs/weekly-digest.job';
+import { startBackupJobs } from './jobs/backup.job';
 import { initializeInsuranceVerifier } from './services/insuranceVerifier';
 import { startTelemetry, shutdownTelemetry, prometheusRequestHandler } from './otel';
 
@@ -100,6 +103,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/exports', exportRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/autonomy', autonomyRoutes);
 
 app.get('/metrics', (req, res) => {
   return prometheusRequestHandler(req, res);
@@ -115,6 +119,8 @@ const server = app.listen(port, () => {
   startInviteExpiryJob();
   startContractorSearchSyncJob();
   startDocumentExpiryJob();
+  startWeeklyDigestJob();
+  startBackupJobs();
   initializeInsuranceVerifier().catch((error) => {
     console.error('Failed to initialize insurance verifier', error);
   });
@@ -134,3 +140,6 @@ const gracefulShutdown = async () => {
 
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
+
+
+

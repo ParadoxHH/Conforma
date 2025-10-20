@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import prisma from '../lib/prisma';
+import { recordCronRun } from '../lib/autonomyHealth';
 
 // This cron job runs every minute
 export const startMilestoneApprover = () => {
@@ -18,18 +19,19 @@ export const startMilestoneApprover = () => {
     });
 
     if (milestonesToApprove.length > 0) {
-      console.log(`Found ${milestonesToApprove.length} milestones to auto-approve.`);
+      console.log(Found  milestones to auto-approve.);
       for (const milestone of milestonesToApprove) {
         await prisma.milestone.update({
           where: { id: milestone.id },
           data: { status: 'RELEASED' },
         });
-        // In a real app, you would also trigger a payout here
-        // and send notifications.
-        console.log(`Auto-approved milestone ${milestone.id}`);
+        console.log(Auto-approved milestone );
       }
+      recordCronRun('milestone_approver', utoApproved=);
     } else {
       console.log('No milestones to auto-approve.');
+      recordCronRun('milestone_approver');
     }
   });
 };
+

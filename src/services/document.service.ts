@@ -1,4 +1,4 @@
-﻿import { randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import {
   DocumentAiStatus,
   DocumentStatus,
@@ -9,6 +9,7 @@ import {
 } from '@prisma/client';
 import prismaClient from '../lib/prisma';
 import * as notificationService from './notification.service';
+import { notify } from '../lib/email/notifier';
 import { enqueueInsuranceVerification, reverifyDocument as queueReverification } from './insuranceVerifier';
 import { getCdnBaseUrl, getUploadBaseUrl } from '../utils/uploads';
 
@@ -342,12 +343,13 @@ export async function expireStaleDocuments(prisma: PrismaClient = prismaClient) 
     ];
 
     if (document.user?.email) {
-      notificationService.sendEmail(
-        document.user.email,
-        'Conforma: document expired',
-        `${messageLines.join('\n')}\n\nUpload a new document from your dashboard.`,
-        `<p>${messageLines.join('</p><p>')}</p><p>Upload a new document from your dashboard.</p>`,
-      );
+      notify('document_rejected', {
+        to: document.user.email,
+        type: document.type,
+        reason: `Document expired on ${document.effectiveTo?.toDateString()}`,
+      }).catch((error) => {
+        console.error('Failed to send document expired email', error);
+      });
     }
 
     await notificationService.createInAppNotification(document.userId, 'DOCUMENT_EXPIRED', {
@@ -378,12 +380,13 @@ export async function expireStaleDocuments(prisma: PrismaClient = prismaClient) 
     ].join('\n');
 
     if (document.user?.email) {
-      notificationService.sendEmail(
-        document.user.email,
-        'Conforma: document expiring soon',
-        `${message}\n\nUpload a new document from your dashboard.`,
-        `<p>${message.replace(/\n/g, '</p><p>')}</p><p>Upload a new document from your dashboard.</p>`,
-      );
+      notify('document_expiring_soon', {
+        to: document.user.email,
+        type: document.type,
+        effectiveTo: document.effectiveTo ?? new Date(),
+      }).catch((error) => {
+        console.error('Failed to send document expiring email', error);
+      });
     }
 
     await notificationService.createInAppNotification(document.userId, 'DOCUMENT_EXPIRING_SOON', {
@@ -421,3 +424,4 @@ export async function overrideKycStatus(
 
   return updated;
 }
+
