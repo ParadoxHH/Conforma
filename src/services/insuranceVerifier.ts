@@ -6,7 +6,6 @@ import { Prisma, PrismaClient, DocumentStatus, DocumentAiStatus, DocumentType, R
 import prismaClient from '../lib/prisma';
 import { logger } from '../utils/logger';
 import * as notificationService from './notification.service';
-import { notify } from '../lib/email/notifier';
 import { getOpenAIClient, isAiConfigured, resolveOpenAiModel } from '../lib/openai';
 
 type VerificationOptions = {
@@ -611,25 +610,12 @@ const notifyContractor = async (document: any, decision: VerificationDecision) =
     .join('\n');
 
   if (document.user?.email) {
-    const emailEvent =
-      decision.status === DocumentStatus.APPROVED
-        ? 'document_approved'
-        : decision.status === DocumentStatus.REJECTED
-        ? 'document_rejected'
-        : 'document_needs_review';
-
-    const payload: { to: string; type: DocumentType; reason?: string } = {
-      to: document.user.email,
-      type: document.type,
-    };
-
-    if (emailEvent === 'document_rejected' || emailEvent === 'document_needs_review') {
-      payload.reason = decision.reason;
-    }
-
-    notify(emailEvent as any, payload).catch((error) => {
-      logger.error('Failed to send document verification email', error);
-    });
+    notificationService.sendEmail(
+      document.user.email,
+      subject,
+      `${baseMessage}\n\nVisit your dashboard to view the decision details and next steps.`,
+      `<p>${baseMessage.replace(/\n/g, '<br />')}</p><p>Visit your dashboard to view the decision details and next steps.</p>`,
+    );
   }
 
   const notificationType =
@@ -744,4 +730,3 @@ export const verificationTestHelpers = {
   decideVerification,
   parseDateString,
 };
-

@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+﻿import { randomUUID } from 'crypto';
 import {
   InviteStatus,
   InviteRole,
@@ -9,7 +9,6 @@ import {
 import prismaClient from '../lib/prisma';
 import * as notificationService from './notification.service';
 import { logger } from '../utils/logger';
-import { notify } from '../lib/email/notifier';
 import * as argon2 from 'argon2';
 
 const INVITE_EXPIRATION_DAYS = 7;
@@ -72,12 +71,9 @@ export async function createInvite(
 ) {
   const { role, email, phone, jobId, createdByUserId } = input;
 
-  const job = jobId ? await assertJobAccess(jobId, createdByUserId, prisma) : null;
-
-  const inviter = await prisma.user.findUnique({
-    where: { id: createdByUserId },
-    select: { email: true },
-  });
+  if (jobId) {
+    await assertJobAccess(jobId, createdByUserId, prisma);
+  }
 
   const token = randomUUID();
   const expiresAt = computeExpirationDate();
@@ -94,17 +90,24 @@ export async function createInvite(
     },
   });
 
-  const baseUrl = (process.env.FRONTEND_URL ?? 'https://app.conforma.app').replace(/\/$/, '');
-  const acceptUrl = `${baseUrl}/invitations/${token}`;
+  const emailSubject = 'You have been invited to Conforma';
+  const emailBody = `You've been invited to join Conforma as a ${role.toLowerCase()}.
 
-  notify('invite_sent', {
-    to: invite.email,
-    inviterName: inviter?.email ?? undefined,
-    jobTitle: job?.title ?? undefined,
-    acceptUrl,
-  }).catch((error) => {
+Please use the following link to accept the invitation and set up your account:
+${process.env.FRONTEND_URL}/invitations/${token}
+
+This invitation will expire on ${expiresAt.toDateString()}.`;
+
+  try {
+    await notificationService.sendEmail(
+      email.toLowerCase(),
+      emailSubject,
+      emailBody,
+      `<p>${emailBody.replace(/\n/g, '<br />')}</p>`,
+    );
+  } catch (error) {
     logger.error('Failed to send invite email', error);
-  });
+  }
 
   await notificationService.createInAppNotification(createdByUserId, 'INVITE_CREATED', {
     inviteId: invite.id,
@@ -181,17 +184,6 @@ export async function acceptInvite(
 
   ensureInviteActive(invite);
 
-  const jobMeta = invite.jobId
-    ? await prisma.job.findUnique({
-        where: { id: invite.jobId },
-        select: {
-          title: true,
-          homeowner: { select: { user: { select: { email: true } } } },
-          contractor: { select: { user: { select: { email: true } } } },
-        },
-      })
-    : null;
-
   const user = await ensureUserForInvite(invite, input.password, prisma);
 
   const role = invite.role;
@@ -244,31 +236,6 @@ export async function acceptInvite(
     inviteId: invite.id,
   });
 
-  if (jobMeta) {
-    const recipients = new Set<string>();
-    const inviteeEmail = invite.email.toLowerCase();
-    const homeownerEmail = jobMeta.homeowner?.user?.email?.toLowerCase();
-    const contractorEmail = jobMeta.contractor?.user?.email?.toLowerCase();
-
-    if (homeownerEmail) {
-      recipients.add(homeownerEmail);
-    }
-    if (contractorEmail) {
-      recipients.add(contractorEmail);
-    }
-    recipients.delete(inviteeEmail);
-
-    for (const to of recipients) {
-      notify('invite_accepted', {
-        to,
-        inviteeEmail,
-        jobTitle: jobMeta.title ?? undefined,
-      }).catch((error) => {
-        logger.error('Failed to send invite accepted email', error);
-      });
-    }
-  }
-
   return { userId: user.id, inviteId: invite.id };
 }
 
@@ -295,5 +262,3 @@ export async function getInviteByToken(
     where: { token },
   });
 }
-
-
