@@ -15,6 +15,7 @@ import profileRoutes from './routes/profile.routes';
 import searchRoutes from './routes/search.routes';
 import inviteRoutes from './routes/invite.routes';
 import documentRoutes from './routes/document.routes';
+import evidenceRoutes from './routes/evidence.routes';
 import notificationRoutes from './routes/notification.routes';
 import billingRoutes from './routes/billing.routes';
 import payoutRoutes from './routes/payout.routes';
@@ -27,11 +28,18 @@ import referralRoutes from './routes/referral.routes';
 import { startMilestoneApprover } from './jobs/milestone-approver';
 import { startInviteExpiryJob } from './jobs/invite-expirer.job';
 import { startContractorSearchSyncJob } from './jobs/search-sync.job';
+import { startDocumentExpiryJob } from './jobs/document-expirer.job';
+import { initializeInsuranceVerifier } from './services/insuranceVerifier';
+import { startTelemetry, shutdownTelemetry, prometheusRequestHandler } from './otel';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+startTelemetry().catch((error) => {
+  console.error('Telemetry initialization failed', error);
+});
 
 // --- Middleware ---
 const allowedOrigins = (process.env.FRONTEND_URL ?? '')
@@ -82,6 +90,7 @@ app.use('/api/profiles', profileRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/invites', inviteRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/evidence', evidenceRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/payouts', payoutRoutes);
 app.use('/api/match', matchRoutes);
@@ -92,13 +101,36 @@ app.use('/api/exports', exportRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/notifications', notificationRoutes);
 
+app.get('/metrics', (req, res) => {
+  return prometheusRequestHandler(req, res);
+});
+
 app.get('/', (req, res) => {
   res.send('Conforma API is running!');
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
   startMilestoneApprover();
   startInviteExpiryJob();
   startContractorSearchSyncJob();
+  startDocumentExpiryJob();
+  initializeInsuranceVerifier().catch((error) => {
+    console.error('Failed to initialize insurance verifier', error);
+  });
 });
+
+const gracefulShutdown = async () => {
+  try {
+    await shutdownTelemetry();
+  } catch (error) {
+    console.error('Telemetry shutdown failed', error);
+  } finally {
+    server.close(() => {
+      process.exit(0);
+    });
+  }
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);

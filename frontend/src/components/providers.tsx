@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider } from '@/components/auth-context';
 import { TranslationProvider } from '@/i18n/translation-context';
+import { ServiceWorkerRegistrar } from '@/components/service-worker-registrar';
 
 type ProvidersProps = {
   children: ReactNode;
@@ -16,7 +17,10 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <TranslationProvider>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ServiceWorkerRegistrar />
+          {children}
+        </AuthProvider>
       </TranslationProvider>
     </QueryClientProvider>
   );

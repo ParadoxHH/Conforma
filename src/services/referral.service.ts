@@ -1,4 +1,4 @@
-﻿import type { PrismaClient } from '@prisma/client';
+﻿import { PrismaClient, ReferralEventType } from '@prisma/client';
 import prismaClient from '../lib/prisma';
 
 const generateCode = async (prisma: PrismaClient, prefix: string) => {
@@ -41,9 +41,9 @@ export const getReferralSummary = async (userId: string, prisma: PrismaClient = 
     where: { referrerUserId: userId },
   });
 
-  const signups = events.filter((event) => event.event === 'SIGNED_UP').length;
-  const firstFundedJobs = events.filter((event) => event.event === 'FIRST_FUNDED_JOB').length;
-  const creditsRedeemed = events.filter((event) => event.event === 'CREDIT_REDEEMED').length;
+  const signups = events.filter((event) => event.event === ReferralEventType.SIGNED_UP).length;
+  const firstFundedJobs = events.filter((event) => event.event === ReferralEventType.FIRST_FUNDED_JOB).length;
+  const creditsRedeemed = events.filter((event) => event.event === ReferralEventType.CREDIT_REDEEMED).length;
   const credits = Math.max(firstFundedJobs - creditsRedeemed, 0);
 
   return {
@@ -92,7 +92,7 @@ export const redeemReferralCode = async (
       where: {
         referrerUserId: referrer.id,
         referredUserId: null,
-        event: 'SIGNED_UP',
+        event: ReferralEventType.SIGNED_UP,
       },
     });
 
@@ -101,7 +101,7 @@ export const redeemReferralCode = async (
         data: {
           referrerUserId: referrer.id,
           referredUserId: null,
-          event: 'SIGNED_UP',
+          event: ReferralEventType.SIGNED_UP,
         },
       });
     }
@@ -138,7 +138,7 @@ export const recordFirstFundedJob = async (jobId: string, prisma: PrismaClient =
     where: {
       referrerUserId: referrer.id,
       referredUserId: job.homeowner.userId,
-      event: 'FIRST_FUNDED_JOB',
+      event: ReferralEventType.FIRST_FUNDED_JOB,
     },
   });
 
@@ -150,7 +150,7 @@ export const recordFirstFundedJob = async (jobId: string, prisma: PrismaClient =
     data: {
       referrerUserId: referrer.id,
       referredUserId: job.homeowner.userId,
-      event: 'FIRST_FUNDED_JOB',
+      event: ReferralEventType.FIRST_FUNDED_JOB,
     },
   });
 };
@@ -165,12 +165,15 @@ export const redeemReferralCredit = async (userId: string, prisma: PrismaClient 
     data: {
       referrerUserId: userId,
       referredUserId: null,
-      event: 'CREDIT_REDEEMED',
+      event: ReferralEventType.CREDIT_REDEEMED,
     },
   });
 
   return summary.stats.credits - 1;
 };
+
+
+
 
 
 

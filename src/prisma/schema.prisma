@@ -96,6 +96,7 @@ model Job {
   invites             Invite[]
   reviews             Review[]
   payouts             Payout[]
+  riskEvents         RiskEvent[]
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
 }
@@ -124,6 +125,7 @@ model EvidenceFile {
   uploaderUserId String
   url          String
   type         String
+  contentHash  String?   @unique
   createdAt    DateTime  @default(now())
 }
 
@@ -215,17 +217,46 @@ model Invite {
 }
 
 model Document {
-  id         String         @id @default(cuid())
-  user       User           @relation(fields: [userId], references: [id])
-  userId     String
-  type       DocumentType
-  url        String
-  status     DocumentStatus @default(PENDING)
-  notes      String?
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  id            String            @id @default(cuid())
+  user          User              @relation(fields: [userId], references: [id])
+  userId        String
+  type          DocumentType
+  url           String
+  status        DocumentStatus    @default(PENDING)
+  aiStatus      DocumentAiStatus  @default(NONE)
+  aiConfidence  Decimal           @default(0) @db.Decimal(5, 4)
+  aiReason      String?
+  issuer        String?
+  policyNumber  String?
+  effectiveFrom DateTime?         @db.Timestamptz(6)
+  effectiveTo   DateTime?         @db.Timestamptz(6)
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@index([status], map: "document_status_idx")
+  @@index([aiStatus], map: "document_ai_status_idx")
+  @@index([userId, type], map: "document_user_type_idx")
+}
+
+model RiskEvent {
+  id        String   @id @default(cuid())
+  job       Job      @relation(fields: [jobId], references: [id])
+  jobId     String
+  score     Int
+  reasons   String[]
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([jobId, createdAt], map: "risk_event_job_created_idx")
+}
+
+model RiskConfig {
+  id                  Int    @id
+  allowThreshold      Int    @default(25)
+  blockThreshold      Int    @default(50)
+  maxJobAmountByTrade Json?
+  updatedAt           DateTime @updatedAt @db.Timestamptz(6)
+  createdAt           DateTime @default(now()) @db.Timestamptz(6)
 }
 
 model Payout {
@@ -327,6 +358,7 @@ enum InviteStatus {
 enum DocumentType {
   LICENSE
   INSURANCE
+  CERT
   OTHER
 }
 
@@ -334,6 +366,15 @@ enum DocumentStatus {
   PENDING
   APPROVED
   REJECTED
+  NEEDS_REVIEW
+  EXPIRED
+}
+
+enum DocumentAiStatus {
+  NONE
+  APPROVED
+  REJECTED
+  NEEDS_REVIEW
 }
 
 enum SubscriptionTier {
@@ -376,4 +417,5 @@ enum AnalyticsSnapshotKind {
 enum ReferralEventType {
   SIGNED_UP
   FIRST_FUNDED_JOB
+  CREDIT_REDEEMED
 }

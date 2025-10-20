@@ -1,12 +1,12 @@
-import { PrismaClient, SubscriptionStatus, SubscriptionTier } from '@prisma/client';
+﻿import { PrismaClient, SubscriptionStatus, SubscriptionTier } from '@prisma/client';
 import Stripe from 'stripe';
 import prismaClient from '../lib/prisma';
 import { appConfig, subscriptionPlans, SubscriptionPlanDefinition } from '../config/app.config';
-import { getReferralSummary, redeemReferralCredit } from './referral.service';
 import { getStripe, isStripeConfigured } from '../lib/stripe';
+import { getReferralSummary, redeemReferralCredit } from './referral.service';
 
 type SubscribeInput = {
-  plan: SubscriptionTier.PRO | SubscriptionTier.VERIFIED;
+  plan: 'PRO' | 'VERIFIED';
   paymentMethodId?: string;
   successUrl?: string;
   cancelUrl?: string;
@@ -24,38 +24,13 @@ type BillingSummary = {
   stripeSubscriptionId?: string | null;
 };
 
-const getPlanDefinition = (tier: SubscriptionTier): SubscriptionPlanDefinition => {
-  const plan = subscriptionPlans.find((item) => item.tier === tier);
-  if (!plan) {
-    throw new Error(`Unknown subscription tier: ${tier}`);
-  }
-  return plan;
-};
-
-export const listPlans = () => {
-  return subscriptionPlans.map((plan) => ({
-    tier: plan.tier,
-    name: plan.name,
-    priceMonthly: plan.priceMonthly,
-    badge: plan.badge,
-    description: plan.description,
-    features: plan.features,
-    perks: plan.perks,
-    instantPayoutIncluded: plan.instantPayoutIncluded,
-    highlight: plan.highlight,
-    priceId: plan.priceId ?? null,
-  }));
-};
+export const listPlans = (): SubscriptionPlanDefinition[] => subscriptionPlans;
 
 export const getBillingSummary = async (
   userId: string,
   prisma: PrismaClient = prismaClient,
 ): Promise<BillingSummary> => {
-  const contractor = await prisma.contractor.findUnique({
-    where: { userId },
-    include: { user: true },
-  });
-
+  const contractor = await prisma.contractor.findUnique({ where: { userId } });
   if (!contractor) {
     throw new Error('Contractor profile not found.');
   }
@@ -69,7 +44,7 @@ export const getBillingSummary = async (
   const summary: BillingSummary = {
     tier: contractor.subscriptionTier,
     status: contractor.subscriptionStatus,
-    renewalAt: contractor.subscriptionRenewalAt,
+    renewalAt: contractor.subscriptionRenewalAt ?? null,
     instantPayoutEnabled: contractor.instantPayoutEnabled,
     instantPayoutEligible: contractor.subscriptionTier !== SubscriptionTier.FREE,
     platformFeeBps: feeBps,
@@ -95,17 +70,21 @@ export const subscribe = async (
   input: SubscribeInput,
   prisma: PrismaClient = prismaClient,
 ) => {
-  const contractor = await prisma.contractor.findUnique({
-    where: { userId },
-  });
-
+  const contractor = await prisma.contractor.findUnique({ where: { userId }, include: { user: true } });
   if (!contractor) {
     throw new Error('Contractor profile not found.');
   }
 
-  const plan = getPlanDefinition(input.plan);
+  const plan = subscriptionPlans.find((p) => p.tier === input.plan);
+  if (!plan) {
+    throw new Error(`Unknown plan ${input.plan}`);
+  }
 
-  if (referralCredits > 0) {\n    await redeemReferralCredit(user.id, prisma);\n    await prisma.contractor.update({\n      where: { id: contractor.id },\n      data: {\n        subscriptionTier: plan.tier,\n        subscriptionStatus: SubscriptionStatus.ACTIVE,\n        instantPayoutEnabled: plan.instantPayoutIncluded || contractor.instantPayoutEnabled,\n        subscriptionRenewalAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),\n      },\n    });\n\n    return {\n      activation: 'referral-credit',\n      checkoutUrl: null,\n      creditsRemaining: referralCredits - 1,\n    };\n  }\n\n  if (!isStripeConfigured() || !plan.priceId) {
+  const referralSummary = await getReferralSummary(userId, prisma);
+  const hasReferralCredit = referralSummary.stats.credits > 0;
+
+  if (hasReferralCredit) {
+    await redeemReferralCredit(userId, prisma);
     await prisma.contractor.update({
       where: { id: contractor.id },
       data: {
@@ -117,7 +96,25 @@ export const subscribe = async (
     });
 
     return {
-      activation: 'local',
+      activation: 'referral-credit' as const,
+      checkoutUrl: null,
+      creditsRemaining: referralSummary.stats.credits - 1,
+    };
+  }
+
+  if (!isStripeConfigured() || !plan.priceId) {
+    await prisma.contractor.update({
+      where: { id: contractor.id },
+      data: {
+        subscriptionTier: plan.tier,
+        subscriptionStatus: SubscriptionStatus.ACTIVE,
+        instantPayoutEnabled: plan.instantPayoutIncluded || contractor.instantPayoutEnabled,
+        subscriptionRenewalAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    return {
+      activation: 'local' as const,
       checkoutUrl: null,
     };
   }
@@ -127,7 +124,7 @@ export const subscribe = async (
   let customerId = contractor.stripeCustomerId;
   if (!customerId) {
     const customer = await stripe.customers.create({
-      email: contractor.user?.email,
+      email: contractor.user?.email ?? undefined,
       metadata: {
         contractorId: contractor.id,
       },
@@ -165,7 +162,7 @@ export const subscribe = async (
   });
 
   return {
-    activation: 'stripe',
+    activation: 'stripe' as const,
     checkoutUrl: session.url,
   };
 };
@@ -191,31 +188,31 @@ export const updateSubscriptionFromStripe = async ({
   subscriptionId: string;
   customerId: string;
   status: Stripe.Subscription.Status;
-  planTier?: SubscriptionTier;
+  planTier?: SubscriptionTier | null;
   currentPeriodEnd?: number | null;
 }) => {
   const contractor = await prismaClient.contractor.findFirst({
-    where: {
-      stripeCustomerId: customerId,
-    },
+    where: { stripeCustomerId: customerId },
   });
 
   if (!contractor) {
     return;
   }
 
-  const tierToPersist = planTier ?? contractor.subscriptionTier;
-  const subscriptionStatus = mapStripeStatus(status);
+  const nextTier = planTier ?? contractor.subscriptionTier;
+  const nextStatus = mapStripeStatus(status);
 
   await prismaClient.contractor.update({
     where: { id: contractor.id },
     data: {
-      subscriptionTier: tierToPersist,
-      subscriptionStatus,
+      subscriptionTier: nextTier,
+      subscriptionStatus: nextStatus,
       stripeSubscriptionId: subscriptionId,
       subscriptionRenewalAt: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : contractor.subscriptionRenewalAt,
       instantPayoutEnabled:
-        tierToPersist !== SubscriptionTier.FREE ? contractor.instantPayoutEnabled || tierToPersist === SubscriptionTier.VERIFIED : contractor.instantPayoutEnabled,
+        nextTier !== SubscriptionTier.FREE
+          ? contractor.instantPayoutEnabled || nextTier === SubscriptionTier.VERIFIED
+          : contractor.instantPayoutEnabled,
     },
   });
 };
@@ -233,5 +230,3 @@ const mapStripeStatus = (status: Stripe.Subscription.Status): SubscriptionStatus
       return SubscriptionStatus.PAST_DUE;
   }
 };
-
-

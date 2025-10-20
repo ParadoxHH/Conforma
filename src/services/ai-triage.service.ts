@@ -1,4 +1,4 @@
-import { AiDisputeSuggestion, Prisma, PrismaClient } from '@prisma/client';
+﻿import { AiDisputeSuggestion, AiDisputeSummary, Prisma, PrismaClient } from '@prisma/client';
 import prismaClient from '../lib/prisma';
 import { appConfig } from '../config/app.config';
 import { getOpenAIClient, isAiConfigured } from '../lib/openai';
@@ -10,9 +10,12 @@ type TriageResult = {
   modelInfo: Record<string, unknown>;
 };
 
-const DEFAULT_MODEL = 'gpt-4o-mini';
+const DEFAULT_MODEL = process.env.AI_MODEL ?? 'gpt-4o-mini';
 
-export const triageDispute = async (disputeId: string, prisma: PrismaClient = prismaClient) => {
+export const triageDispute = async (
+  disputeId: string,
+  prisma: PrismaClient = prismaClient,
+): Promise<AiDisputeSummary> => {
   const dispute = await prisma.dispute.findUnique({
     where: { id: disputeId },
     include: {
@@ -44,14 +47,14 @@ export const triageDispute = async (disputeId: string, prisma: PrismaClient = pr
       summary: triageResult.summary,
       suggestion: triageResult.suggestion,
       confidence: new Prisma.Decimal(Math.min(Math.max(triageResult.confidence, 0), 1)),
-      modelInfo: triageResult.modelInfo,
+      modelInfo: triageResult.modelInfo as Prisma.JsonObject,
     },
     create: {
       disputeId,
       summary: triageResult.summary,
       suggestion: triageResult.suggestion,
       confidence: new Prisma.Decimal(Math.min(Math.max(triageResult.confidence, 0), 1)),
-      modelInfo: triageResult.modelInfo,
+      modelInfo: triageResult.modelInfo as Prisma.JsonObject,
     },
   });
 
@@ -59,9 +62,7 @@ export const triageDispute = async (disputeId: string, prisma: PrismaClient = pr
 };
 
 export const getDisputeTriage = async (disputeId: string, prisma: PrismaClient = prismaClient) => {
-  return prisma.aiDisputeSummary.findUnique({
-    where: { disputeId },
-  });
+  return prisma.aiDisputeSummary.findUnique({ where: { disputeId } });
 };
 
 const runAiTriage = async (dispute: any): Promise<TriageResult> => {
@@ -69,21 +70,20 @@ const runAiTriage = async (dispute: any): Promise<TriageResult> => {
   const job = dispute.milestone.job;
   const homeowner = job.homeowner?.user;
   const contractor = job.contractor?.user;
+  const attachments = (dispute.milestone.evidence ?? []).map((item: any) => `${item.type}: ${item.url}`);
 
-  const attachments = (dispute.milestone.evidence ?? []).map((item: any) => ${item.type}: );
+  const prompt = `You are a dispute resolution analyst. Review the following context and return a JSON object with keys summary (string <= 200 words), suggestion (one of PARTIAL_RELEASE, PARTIAL_REFUND, RESUBMIT, UNSURE) and confidence (0-1).
 
-  const prompt = You are a dispute resolution analyst. Review the following context and return a JSON object with keys summary (string <= 200 words), suggestion (one of PARTIAL_RELEASE, PARTIAL_REFUND, RESUBMIT, UNSURE) and confidence (0-1).
-
-Job Title: 
-Milestone: 
-Dispute Reason: 
-Homeowner: 
-Contractor: 
-Evidence: 
-;
+Job Title: ${job.title}
+Milestone: ${dispute.milestone.title}
+Dispute Reason: ${dispute.reasonText}
+Homeowner: ${homeowner?.email ?? 'unknown'}
+Contractor: ${contractor?.email ?? 'unknown'}
+Evidence: ${attachments.length > 0 ? attachments.join('; ') : 'None provided'}
+`;
 
   const response = await openai.chat.completions.create({
-    model: process.env.AI_MODEL ?? DEFAULT_MODEL,
+    model: DEFAULT_MODEL,
     temperature: 0.2,
     response_format: { type: 'json_object' },
     messages: [
@@ -104,13 +104,7 @@ Evidence:
     throw new Error('AI response missing content');
   }
 
-  let parsed: any;
-  try {
-    parsed = JSON.parse(message);
-  } catch (error) {
-    throw new Error('Unable to parse AI response.');
-  }
-
+  const parsed = JSON.parse(message);
   const suggestion = mapSuggestion(parsed.suggestion);
   const confidence = typeof parsed.confidence === 'number' ? parsed.confidence : Number(parsed.confidence ?? 0.6);
 
@@ -120,7 +114,7 @@ Evidence:
     confidence: Number.isFinite(confidence) ? confidence : 0.6,
     modelInfo: {
       provider: appConfig.aiProvider,
-      model: process.env.AI_MODEL ?? DEFAULT_MODEL,
+      model: DEFAULT_MODEL,
       usage: response.usage,
     },
   };
@@ -128,11 +122,12 @@ Evidence:
 
 const buildDeterministicFallback = (dispute: any): TriageResult => {
   const milestone = dispute.milestone;
-  const ratingSignal = milestone.job.contractor?.ratingAvg ?? 0;
-  const confidence = ratingSignal >= 4.5 ? 0.35 : 0.5;
+  const confidence = milestone.job.contractor?.ratingAvg && Number(milestone.job.contractor.ratingAvg) >= 4.5 ? 0.35 : 0.5;
 
   return {
-    summary: Milestone "" is under review with homeowner concerns: . Evidence count: . Recommend manual review due to limited AI capabilities in this environment.,
+    summary: `Milestone "${milestone.title}" is under review with homeowner concerns: ${dispute.reasonText}. Evidence count: ${
+      milestone.evidence?.length ?? 0
+    }. Recommend manual review due to limited AI capabilities in this environment.`,
     suggestion: AiDisputeSuggestion.UNSURE,
     confidence,
     modelInfo: {

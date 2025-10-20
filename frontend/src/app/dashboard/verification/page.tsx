@@ -12,9 +12,16 @@ import { BadgeRow } from '@/components/badge-row';
 
 type DocumentRecord = {
   id: string;
-  type: 'LICENSE' | 'INSURANCE' | 'OTHER';
+  type: 'LICENSE' | 'INSURANCE' | 'CERT' | 'OTHER';
   url: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_REVIEW' | 'EXPIRED';
+  aiStatus: 'NONE' | 'APPROVED' | 'REJECTED' | 'NEEDS_REVIEW';
+  aiConfidence: number;
+  aiReason?: string | null;
+  issuer?: string | null;
+  policyNumber?: string | null;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
   notes?: string | null;
   createdAt: string;
 };
@@ -33,6 +40,55 @@ type ProfileSummary = {
   } | null;
 };
 
+const statusBadgeClass = (status: DocumentRecord['status']) => {
+  switch (status) {
+    case 'APPROVED':
+      return 'bg-emerald-100 text-emerald-700';
+    case 'REJECTED':
+      return 'bg-red-100 text-red-700';
+    case 'NEEDS_REVIEW':
+      return 'bg-amber-100 text-amber-700';
+    case 'EXPIRED':
+      return 'bg-rose-100 text-rose-700';
+    default:
+      return 'bg-slate-100 text-slate-600';
+  }
+};
+
+const aiStatusBadgeClass = (status: DocumentRecord['aiStatus']) => {
+  switch (status) {
+    case 'APPROVED':
+      return 'bg-emerald-50 text-emerald-700';
+    case 'REJECTED':
+      return 'bg-red-50 text-red-700';
+    case 'NEEDS_REVIEW':
+      return 'bg-amber-50 text-amber-700';
+    default:
+      return 'bg-slate-50 text-slate-600';
+  }
+};
+
+const formatDateLabel = (value?: string | null) => {
+  if (!value) {
+    return '—';
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString();
+};
+
+const expiresSoon = (value?: string | null, days = 30) => {
+  if (!value) {
+    return false;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return false;
+  }
+  const now = Date.now();
+  const diff = parsed.getTime() - now;
+  return diff > 0 && diff < days * 24 * 60 * 60 * 1000;
+};
+
 const fetchDocuments = () => apiClient.get<{ documents: DocumentRecord[] }>('/documents');
 const fetchProfileSummary = () =>
   apiClient.get<ProfileSummary>('/profiles/me').then((profile) => ({
@@ -42,7 +98,7 @@ const fetchProfileSummary = () =>
   }));
 
 export default function VerificationPage() {
-  const [selectedType, setSelectedType] = useState<'LICENSE' | 'INSURANCE' | 'OTHER'>('LICENSE');
+  const [selectedType, setSelectedType] = useState<'LICENSE' | 'INSURANCE' | 'CERT' | 'OTHER'>('LICENSE');
   const [fileUrl, setFileUrl] = useState('');
   const [uploadHint, setUploadHint] = useState<UploadUrlResponse | null>(null);
 
@@ -126,6 +182,7 @@ export default function VerificationPage() {
               <SelectContent>
                 <SelectItem value="LICENSE">License</SelectItem>
                 <SelectItem value="INSURANCE">Insurance</SelectItem>
+                <SelectItem value="CERT">Certificate</SelectItem>
                 <SelectItem value="OTHER">Other</SelectItem>
               </SelectContent>
             </Select>
@@ -176,29 +233,76 @@ export default function VerificationPage() {
           {documents.length === 0 ? (
             <p className="text-slate-600">No documents uploaded yet.</p>
           ) : (
-            documents.map((doc) => (
-              <div
-                key={doc.id}
-                className="flex flex-col gap-1 rounded-2xl border border-slate-200/70 bg-white/70 p-4 shadow-sm"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-900">{doc.type}</span>
-                  <span
-                    className={(() => {
-                      if (doc.status === 'APPROVED') return 'text-success';
-                      if (doc.status === 'REJECTED') return 'text-destructive';
-                      return 'text-amber-600';
-                    })()}
-                  >
-                    {doc.status}
-                  </span>
+            documents.map((doc) => {
+              const confidenceLabel = Number.isFinite(doc.aiConfidence)
+                ? `${Math.round(doc.aiConfidence * 100)}%`
+                : '—';
+              const approachingExpiry = expiresSoon(doc.effectiveTo);
+
+              return (
+                <div
+                  key={doc.id}
+                  className="flex flex-col gap-2 rounded-2xl border border-slate-200/70 bg-white/70 p-4 shadow-sm"
+                >
+                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-slate-900">{doc.type}</span>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${statusBadgeClass(doc.status)}`}
+                        >
+                          {doc.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500">Uploaded {formatDateLabel(doc.createdAt)}</p>
+                    </div>
+                    <div className="flex flex-col items-start gap-1 text-xs md:items-end">
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${aiStatusBadgeClass(doc.aiStatus)}`}
+                      >
+                        AI {doc.aiStatus.toLowerCase()}
+                      </span>
+                      <span className="text-xs text-slate-500">Confidence {confidenceLabel}</span>
+                    </div>
+                  </div>
+                  <a href={doc.url} className="text-xs text-primary" target="_blank" rel="noreferrer">
+                    {doc.url}
+                  </a>
+                  {doc.aiReason ? (
+                    <p className="text-xs text-slate-600">AI notes: {doc.aiReason}</p>
+                  ) : null}
+                  <div className="grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
+                    {doc.policyNumber ? (
+                      <div className="rounded-md bg-slate-100 px-2 py-1">Policy #: {doc.policyNumber}</div>
+                    ) : null}
+                    {doc.issuer ? (
+                      <div className="rounded-md bg-slate-100 px-2 py-1">Issuer: {doc.issuer}</div>
+                    ) : null}
+                    {doc.effectiveFrom ? (
+                      <div className="rounded-md bg-slate-100 px-2 py-1">
+                        Effective {formatDateLabel(doc.effectiveFrom)}
+                      </div>
+                    ) : null}
+                    {doc.effectiveTo ? (
+                      <div
+                        className={`rounded-md px-2 py-1 ${
+                          doc.status === 'EXPIRED'
+                            ? 'bg-rose-100 text-rose-700'
+                            : approachingExpiry
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        Expires {formatDateLabel(doc.effectiveTo)}
+                      </div>
+                    ) : null}
+                  </div>
+                  {doc.notes ? (
+                    <p className="text-xs text-slate-500">Reviewer notes: {doc.notes}</p>
+                  ) : null}
                 </div>
-                <a href={doc.url} className="text-xs text-primary" target="_blank" rel="noreferrer">
-                  {doc.url}
-                </a>
-                {doc.notes ? <p className="text-xs text-slate-500">Notes: {doc.notes}</p> : null}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

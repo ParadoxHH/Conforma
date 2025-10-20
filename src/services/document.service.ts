@@ -1,31 +1,24 @@
 ﻿import { randomUUID } from 'crypto';
 import {
+  DocumentAiStatus,
   DocumentStatus,
   DocumentType,
+  Prisma,
   PrismaClient,
   Role,
 } from '@prisma/client';
 import prismaClient from '../lib/prisma';
 import * as notificationService from './notification.service';
-
-const DEFAULT_UPLOAD_BASE_URL = 'https://uploads.conforma.com';
-const DEFAULT_CDN_BASE_URL = 'https://cdn.conforma.com';
-
-function resolveUploadBaseUrl() {
-  return process.env.FILE_UPLOAD_BASE_URL ?? DEFAULT_UPLOAD_BASE_URL;
-}
-
-function resolveCdnBaseUrl() {
-  return process.env.FILE_CDN_BASE_URL ?? DEFAULT_CDN_BASE_URL;
-}
+import { enqueueInsuranceVerification, reverifyDocument as queueReverification } from './insuranceVerifier';
+import { getCdnBaseUrl, getUploadBaseUrl } from '../utils/uploads';
 
 export async function createUploadUrl(
   userId: string,
   type: DocumentType,
 ) {
   const key = `verification/${userId}/${type.toLowerCase()}-${randomUUID()}`;
-  const baseUploadUrl = resolveUploadBaseUrl();
-  const cdnBaseUrl = resolveCdnBaseUrl();
+  const baseUploadUrl = getUploadBaseUrl();
+  const cdnBaseUrl = getCdnBaseUrl();
 
   return {
     uploadUrl: `${baseUploadUrl}/${key}`,
@@ -49,6 +42,8 @@ export async function createDocumentRecord(
       type,
       url: fileUrl,
       status: DocumentStatus.PENDING,
+      aiStatus: DocumentAiStatus.NONE,
+      aiReason: null,
     },
   });
 
@@ -56,6 +51,14 @@ export async function createDocumentRecord(
     documentId: document.id,
     type,
   });
+
+  if (
+    type === DocumentType.INSURANCE ||
+    type === DocumentType.LICENSE ||
+    type === DocumentType.CERT
+  ) {
+    enqueueInsuranceVerification(document.id, { force: true });
+  }
 
   return document;
 }
@@ -164,7 +167,10 @@ export async function approveDocument(
     where: { id: documentId },
     data: {
       status: DocumentStatus.APPROVED,
-      notes: `Approved by ${reviewerUserId} at ${new Date().toISOString()}`,
+      aiStatus: DocumentAiStatus.APPROVED,
+      aiConfidence: new Prisma.Decimal(1),
+      aiReason: `Manually approved by ${reviewerUserId} on ${new Date().toISOString()}`,
+      notes: `Approved by ${reviewerUserId}`,
     },
   });
 
@@ -196,6 +202,9 @@ export async function rejectDocument(
     where: { id: documentId },
     data: {
       status: DocumentStatus.REJECTED,
+      aiStatus: DocumentAiStatus.REJECTED,
+      aiConfidence: new Prisma.Decimal(0.2),
+      aiReason: `Rejected by ${reviewerUserId}`,
       notes,
     },
   });
@@ -208,6 +217,182 @@ export async function rejectDocument(
   });
 
   return updated;
+}
+
+type ReviewOptions = {
+  reason?: string;
+  effectiveTo?: Date | null;
+};
+
+export async function reviewDocumentStatus(
+  documentId: string,
+  status: DocumentStatus,
+  reviewerUserId: string,
+  options: ReviewOptions = {},
+  prisma: PrismaClient = prismaClient,
+) {
+  if (status === DocumentStatus.APPROVED) {
+    return approveDocument(documentId, reviewerUserId, prisma);
+  }
+  if (status === DocumentStatus.REJECTED) {
+    return rejectDocument(documentId, options.reason ?? 'Rejected by admin', reviewerUserId, prisma);
+  }
+
+  const document = await prisma.document.findUnique({
+    where: { id: documentId },
+  });
+
+  if (!document) {
+    throw new Error('Document not found');
+  }
+
+  const data: Prisma.DocumentUpdateInput = {
+    status,
+    notes: options.reason ?? null,
+    aiReason:
+      options.reason ?? `Status manually set to ${status} by ${reviewerUserId} at ${new Date().toISOString()}`,
+    aiStatus: status === DocumentStatus.EXPIRED ? DocumentAiStatus.REJECTED : DocumentAiStatus.NEEDS_REVIEW,
+    aiConfidence:
+      status === DocumentStatus.EXPIRED
+        ? new Prisma.Decimal(0.35)
+        : new Prisma.Decimal(0.5),
+  };
+
+  if (options.effectiveTo !== undefined) {
+    data.effectiveTo = options.effectiveTo;
+  }
+
+  const updated = await prisma.document.update({
+    where: { id: documentId },
+    data,
+  });
+
+  if (status === DocumentStatus.NEEDS_REVIEW || status === DocumentStatus.EXPIRED) {
+    await revokeContractorBadge(updated.type, updated.userId, prisma);
+  }
+
+  await notificationService.createInAppNotification(updated.userId, 'DOCUMENT_STATUS_UPDATED', {
+    documentId: updated.id,
+    status,
+    reason: options.reason,
+  });
+
+  return updated;
+}
+
+export async function reverifyDocumentById(
+  documentId: string,
+  prisma: PrismaClient = prismaClient,
+) {
+  const document = await prisma.document.findUnique({
+    where: { id: documentId },
+  });
+
+  if (!document) {
+    throw new Error('Document not found');
+  }
+
+  await prisma.document.update({
+    where: { id: documentId },
+    data: {
+      status: DocumentStatus.NEEDS_REVIEW,
+      aiStatus: DocumentAiStatus.NEEDS_REVIEW,
+      aiConfidence: new Prisma.Decimal(0),
+      aiReason: `Reverification requested at ${new Date().toISOString()}`,
+    },
+  });
+
+  queueReverification(documentId);
+  return document;
+}
+
+export async function expireStaleDocuments(prisma: PrismaClient = prismaClient) {
+  const now = new Date();
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  const expiredDocs = await prisma.document.findMany({
+    where: {
+      effectiveTo: { lt: now },
+      status: { in: [DocumentStatus.APPROVED, DocumentStatus.NEEDS_REVIEW] },
+    },
+    include: {
+      user: {
+        select: { email: true },
+      },
+    },
+  });
+
+  for (const document of expiredDocs) {
+    await prisma.document.update({
+      where: { id: document.id },
+      data: {
+        status: DocumentStatus.EXPIRED,
+        aiStatus: DocumentAiStatus.REJECTED,
+        aiReason: `Document expired on ${document.effectiveTo?.toISOString()}`,
+        aiConfidence: new Prisma.Decimal(0.35),
+        notes: 'Automatically marked expired by system check.',
+      },
+    });
+
+    await revokeContractorBadge(document.type, document.userId, prisma);
+
+    const messageLines = [
+      `Your ${document.type.toLowerCase()} document expired on ${document.effectiveTo?.toDateString()}.`,
+      'Please upload a new document so we can keep your badges active.',
+    ];
+
+    if (document.user?.email) {
+      notificationService.sendEmail(
+        document.user.email,
+        'Conforma: document expired',
+        `${messageLines.join('\n')}\n\nUpload a new document from your dashboard.`,
+        `<p>${messageLines.join('</p><p>')}</p><p>Upload a new document from your dashboard.</p>`,
+      );
+    }
+
+    await notificationService.createInAppNotification(document.userId, 'DOCUMENT_EXPIRED', {
+      documentId: document.id,
+      expiredAt: document.effectiveTo,
+    });
+  }
+
+  const upcomingDocs = await prisma.document.findMany({
+    where: {
+      effectiveTo: {
+        gt: now,
+        lte: new Date(now.getTime() + 7 * dayMs),
+      },
+      status: DocumentStatus.APPROVED,
+    },
+    include: {
+      user: {
+        select: { email: true },
+      },
+    },
+  });
+
+  for (const document of upcomingDocs) {
+    const message = [
+      `Your ${document.type.toLowerCase()} document will expire on ${document.effectiveTo?.toDateString()}.`,
+      'Upload an updated document now to avoid badge removal.',
+    ].join('\n');
+
+    if (document.user?.email) {
+      notificationService.sendEmail(
+        document.user.email,
+        'Conforma: document expiring soon',
+        `${message}\n\nUpload a new document from your dashboard.`,
+        `<p>${message.replace(/\n/g, '</p><p>')}</p><p>Upload a new document from your dashboard.</p>`,
+      );
+    }
+
+    await notificationService.createInAppNotification(document.userId, 'DOCUMENT_EXPIRING_SOON', {
+      documentId: document.id,
+      expiresAt: document.effectiveTo,
+    });
+  }
+
+  return expiredDocs.length;
 }
 
 export async function overrideKycStatus(

@@ -7,6 +7,7 @@ import {
   InviteStatus,
   DocumentType,
   DocumentStatus,
+  DocumentAiStatus,
   SubscriptionTier,
   SubscriptionStatus,
   PayoutType,
@@ -110,22 +111,55 @@ async function main() {
   });
   console.log('Created contractor:', contractorUser.email);
 
-  await prisma.document.createMany({
-    data: [
-      {
-        userId: contractorUser.id,
-        type: DocumentType.LICENSE,
-        url: 'https://documents.conforma.com/license.pdf',
-        status: DocumentStatus.APPROVED,
-        notes: 'Verified by admin seed.',
-      },
-      {
-        userId: contractorUser.id,
-        type: DocumentType.INSURANCE,
-        url: 'https://documents.conforma.com/insurance.pdf',
-        status: DocumentStatus.APPROVED,
-      },
-    ],
+  const dayMs = 24 * 60 * 60 * 1000;
+  await prisma.document.create({
+    data: {
+      userId: contractorUser.id,
+      type: DocumentType.LICENSE,
+      url: 'https://documents.conforma.com/license.pdf',
+      status: DocumentStatus.APPROVED,
+      aiStatus: DocumentAiStatus.APPROVED,
+      aiConfidence: new Prisma.Decimal('0.94'),
+      aiReason: 'AI verified license number, issuer, and active dates.',
+      issuer: 'Texas Department of Licensing and Regulation',
+      policyNumber: 'LIC-987654',
+      effectiveFrom: new Date(Date.now() - 180 * dayMs),
+      effectiveTo: new Date(Date.now() + 365 * dayMs),
+      notes: 'Verified by admin seed.',
+    },
+  });
+
+  await prisma.document.create({
+    data: {
+      userId: contractorUser.id,
+      type: DocumentType.INSURANCE,
+      url: 'https://documents.conforma.com/insurance.pdf',
+      status: DocumentStatus.NEEDS_REVIEW,
+      aiStatus: DocumentAiStatus.NEEDS_REVIEW,
+      aiConfidence: new Prisma.Decimal('0.58'),
+      aiReason: 'Coverage limit missing; flagged for human review.',
+      issuer: 'Lone Star General Insurance Co.',
+      policyNumber: 'GL-554321',
+      effectiveFrom: new Date(Date.now() - 30 * dayMs),
+      effectiveTo: new Date(Date.now() + 60 * dayMs),
+    },
+  });
+
+  await prisma.document.create({
+    data: {
+      userId: contractorUser.id,
+      type: DocumentType.INSURANCE,
+      url: 'https://documents.conforma.com/certificate.pdf',
+      status: DocumentStatus.EXPIRED,
+      aiStatus: DocumentAiStatus.REJECTED,
+      aiConfidence: new Prisma.Decimal('0.31'),
+      aiReason: 'Policy expired 15 days ago.',
+      issuer: 'Lone Star General Insurance Co.',
+      policyNumber: 'GL-554320',
+      effectiveFrom: new Date(Date.now() - 400 * dayMs),
+      effectiveTo: new Date(Date.now() - 15 * dayMs),
+      notes: 'Expired certificate retained for audit.',
+    },
   });
 
   const jobFeeBreakdown: Prisma.JsonObject = {
@@ -149,6 +183,35 @@ async function main() {
     },
   });
   console.log('Created job:', job.title);
+
+  await prisma.riskConfig.upsert({
+    where: { id: 1 },
+    update: {
+      maxJobAmountByTrade: {
+        ROOFING: 30000,
+        SOLAR: 55000,
+        TREE_TRIMMING: 15000,
+      } as Prisma.JsonObject,
+    },
+    create: {
+      id: 1,
+      allowThreshold: 25,
+      blockThreshold: 50,
+      maxJobAmountByTrade: {
+        ROOFING: 30000,
+        SOLAR: 55000,
+        TREE_TRIMMING: 15000,
+      } as Prisma.JsonObject,
+    },
+  });
+
+  await prisma.riskEvent.create({
+    data: {
+      jobId: job.id,
+      score: 55,
+      reasons: ['JOB_AMOUNT_ABOVE_TRADE_CAP', 'DISPOSABLE_EMAIL_DOMAIN'],
+    },
+  });
 
   await prisma.payout.create({
     data: {
@@ -314,6 +377,21 @@ async function main() {
     },
   });
 
+  await prisma.document.create({
+    data: {
+      userId: solarUser.id,
+      type: DocumentType.CERT,
+      url: 'https://documents.conforma.com/solar-nabcep.pdf',
+      status: DocumentStatus.PENDING,
+      aiStatus: DocumentAiStatus.NONE,
+      aiConfidence: new Prisma.Decimal('0'),
+      issuer: 'NABCEP',
+      policyNumber: 'NABCEP-2245',
+      effectiveFrom: new Date(Date.now() - 10 * dayMs),
+      effectiveTo: new Date(Date.now() + 350 * dayMs),
+    },
+  });
+
   const solarFeeBreakdown: Prisma.JsonObject = {
     platformFee: 67.5,
     escrowFees: 45,
@@ -331,6 +409,14 @@ async function main() {
       platformFeeBps: 175,
       feeAmounts: solarFeeBreakdown,
       stateCode: 'TX',
+    },
+  });
+
+  await prisma.riskEvent.create({
+    data: {
+      jobId: solarJob.id,
+      score: 18,
+      reasons: ['PROFILE_HEALTHY', 'HISTORICAL_PERFORMANCE_STRONG'],
     },
   });
 

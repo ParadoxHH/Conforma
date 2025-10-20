@@ -1,4 +1,4 @@
-﻿import { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { DocumentStatus, DocumentType } from '@prisma/client';
 import { z } from 'zod';
 import * as documentService from '../services/document.service';
@@ -18,6 +18,23 @@ const listDocumentsQuerySchema = z.object({
 
 const rejectDocumentSchema = z.object({
   notes: z.string().min(5).max(500),
+});
+
+const reviewDocumentSchema = z.object({
+  status: z.nativeEnum(DocumentStatus),
+  reason: z.string().min(5).max(500).optional(),
+  effectiveTo: z
+    .union([z.string().min(4), z.null()])
+    .optional()
+    .transform((value) => {
+      if (typeof value === 'string') {
+        return new Date(value);
+      }
+      if (value === null) {
+        return null;
+      }
+      return undefined;
+    }),
 });
 
 const overrideKycSchema = z.object({
@@ -80,7 +97,11 @@ export const adminApproveDocument = async (req: Request, res: Response) => {
   try {
     const { id: userId } = req.user as { id: string };
     const { id: documentId } = req.params;
-    const document = await documentService.approveDocument(documentId, userId);
+    const document = await documentService.reviewDocumentStatus(
+      documentId,
+      DocumentStatus.APPROVED,
+      userId,
+    );
     return res.status(200).json({ message: 'Document approved', document });
   } catch (error: any) {
     if (error.message === 'Document not found') {
@@ -95,7 +116,12 @@ export const adminRejectDocument = async (req: Request, res: Response) => {
     const parsed = rejectDocumentSchema.parse(req.body);
     const { id: userId } = req.user as { id: string };
     const { id: documentId } = req.params;
-    const document = await documentService.rejectDocument(documentId, parsed.notes, userId);
+    const document = await documentService.reviewDocumentStatus(
+      documentId,
+      DocumentStatus.REJECTED,
+      userId,
+      { reason: parsed.notes },
+    );
     return res.status(200).json({ message: 'Document rejected', document });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
@@ -105,6 +131,52 @@ export const adminRejectDocument = async (req: Request, res: Response) => {
       return res.status(404).json({ message: error.message });
     }
     return res.status(500).json({ message: 'Failed to reject document', error: error.message });
+  }
+};
+
+export const adminReviewDocument = async (req: Request, res: Response) => {
+  try {
+    const parsed = reviewDocumentSchema.parse(req.body);
+    const { id: documentId } = req.params;
+    const { id: userId } = req.user as { id: string };
+
+    const document = await documentService.reviewDocumentStatus(
+      documentId,
+      parsed.status,
+      userId,
+      {
+        reason: parsed.reason,
+        effectiveTo:
+          parsed.effectiveTo === null
+            ? null
+            : parsed.effectiveTo instanceof Date && !Number.isNaN(parsed.effectiveTo.getTime())
+            ? parsed.effectiveTo
+            : undefined,
+      },
+    );
+
+    return res.status(200).json({ message: 'Document status updated', document });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Validation failed', errors: error.issues });
+    }
+    if (error.message === 'Document not found') {
+      return res.status(404).json({ message: error.message });
+    }
+    return res.status(500).json({ message: 'Unable to update document', error: error.message });
+  }
+};
+
+export const adminReverifyDocument = async (req: Request, res: Response) => {
+  try {
+    const { id: documentId } = req.params;
+    const document = await documentService.reverifyDocumentById(documentId);
+    return res.status(202).json({ message: 'Document queued for reverification', document });
+  } catch (error: any) {
+    if (error.message === 'Document not found') {
+      return res.status(404).json({ message: error.message });
+    }
+    return res.status(500).json({ message: 'Failed to queue reverification', error: error.message });
   }
 };
 

@@ -1,52 +1,81 @@
 import { Request, Response } from 'express';
 import Stripe from 'stripe';
-import { SubscriptionTier } from '@prisma/client';
+import { trace, SpanStatusCode } from '@opentelemetry/api';
+import { Prisma, SubscriptionTier } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { appConfig } from '../config/app.config';
 import { getStripe, isStripeConfigured } from '../lib/stripe';
 import { updateSubscriptionFromStripe } from '../services/billing.service';
 
+const webhookTracer = trace.getTracer('conforma.webhooks');
+
 export const handleEscrowWebhook = async (req: Request, res: Response) => {
-  const { event, data } = req.body;
+  await webhookTracer.startActiveSpan('escrow.webhook', async (span) => {
+    const { event, data } = req.body ?? {};
+    span.setAttributes({
+      'webhook.provider': 'escrow',
+      'webhook.event': event ?? 'unknown',
+    });
 
-  await prisma.webhookEvent.create({
-    data: {
-      source: 'escrow.com',
-      payload: req.body,
-    },
-  });
-
-  try {
-    if (event === 'transaction.updated') {
-      const { id: transactionId, status: transactionStatus } = data;
-
-      const job = await prisma.job.findFirst({
-        where: { escrowTransactionId: transactionId },
+    try {
+      await prisma.webhookEvent.create({
+        data: {
+          source: 'escrow.com',
+          payload: req.body,
+        },
       });
 
-      if (job) {
-        let newJobStatus = job.status;
-        if (transactionStatus === 'funded') {
-          newJobStatus = 'IN_PROGRESS';
-        } else if (transactionStatus === 'cancelled') {
-          newJobStatus = 'DISPUTED';
+      if (event === 'transaction.updated') {
+        const { id: transactionId, status: transactionStatus } = data ?? {};
+
+        if (!transactionId) {
+          span.addEvent('transaction_id_missing');
+          span.setStatus({ code: SpanStatusCode.OK });
+          res.status(200).send('Webhook received');
+          return;
         }
 
-        if (newJobStatus !== job.status) {
-          await prisma.job.update({
-            where: { id: job.id },
-            data: { status: newJobStatus },
-          });
-          console.log(Updated job  to status );
+        span.setAttributes({
+          'escrow.transaction_id': transactionId,
+          'escrow.transaction_status': transactionStatus ?? 'unknown',
+        });
+
+        const job = await prisma.job.findFirst({
+          where: { escrowTransactionId: transactionId },
+        });
+
+        if (job) {
+          let newJobStatus = job.status;
+          if (transactionStatus === 'funded') {
+            newJobStatus = 'IN_PROGRESS';
+          } else if (transactionStatus === 'cancelled') {
+            newJobStatus = 'DISPUTED';
+          }
+
+          if (newJobStatus !== job.status) {
+            await prisma.job.update({
+              where: { id: job.id },
+              data: { status: newJobStatus },
+            });
+            span.addEvent('job_status_updated', {
+              'job.id': job.id,
+              'job.status.new': newJobStatus,
+            });
+          }
         }
       }
-    }
 
-    res.status(200).send('Webhook received');
-  } catch (error) {
-    console.error('Error processing Escrow.com webhook:', error);
-    res.status(500).send('Error processing webhook');
-  }
+      span.setStatus({ code: SpanStatusCode.OK });
+      res.status(200).send('Webhook received');
+    } catch (error) {
+      span.recordException(error as Error);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: (error as Error).message });
+      console.error('Error processing Escrow.com webhook:', error);
+      res.status(500).send('Error processing webhook');
+    } finally {
+      span.end();
+    }
+  });
 };
 
 export const handleStripeWebhook = async (req: Request, res: Response) => {
@@ -58,11 +87,10 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
   try {
     if (signature && webhookSecret && isStripeConfigured()) {
       const stripe = getStripe();
-      const rawBody = req.body instanceof Buffer ? req.body : Buffer.from(JSON.stringify(req.body));
-      event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+      const buffer = req.body instanceof Buffer ? req.body : Buffer.from(JSON.stringify(req.body));
+      event = stripe.webhooks.constructEvent(buffer, signature, webhookSecret);
     } else {
-      const raw = req.body instanceof Buffer ? req.body.toString('utf-8') : JSON.stringify(req.body ?? {});
-      event = JSON.parse(raw);
+      event = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body as Stripe.Event);
     }
   } catch (error) {
     await prisma.webhookEvent.create({
@@ -71,13 +99,13 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
         payload: { message: (error as Error).message },
       },
     });
-    return res.status(400).json({ message: Stripe signature verification failed:  });
+    return res.status(400).json({ message: `Stripe signature verification failed: ${(error as Error).message}` });
   }
 
   await prisma.webhookEvent.create({
     data: {
       source: 'stripe',
-      payload: event,
+      payload: JSON.parse(JSON.stringify(event)) as Prisma.JsonObject,
     },
   });
 
@@ -174,13 +202,13 @@ const parseTier = (value?: string | null): SubscriptionTier | undefined => {
   }
 
   const upper = value.toUpperCase();
-  if (upper === SubscriptionTier.FREE) {
+  if (upper === 'FREE') {
     return SubscriptionTier.FREE;
   }
-  if (upper === SubscriptionTier.PRO) {
+  if (upper === 'PRO') {
     return SubscriptionTier.PRO;
   }
-  if (upper === SubscriptionTier.VERIFIED) {
+  if (upper === 'VERIFIED') {
     return SubscriptionTier.VERIFIED;
   }
   return undefined;

@@ -22,6 +22,13 @@ export const appConfig = {
     .split(',')
     .map((state) => state.trim().toUpperCase())
     .filter((state) => state.length > 0),
+  supportEmail: process.env.SUPPORT_EMAIL ?? 'support@conforma.com',
+  risk: {
+    stateWhitelist: (process.env.STATE_WHITELIST ?? 'TX')
+      .split(',')
+      .map((state) => state.trim().toUpperCase())
+      .filter((state) => state.length > 0),
+  },
   stripe: {
     secretKey: process.env.STRIPE_SECRET ?? '',
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? '',

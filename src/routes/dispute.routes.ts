@@ -4,13 +4,10 @@ import { protect } from '../middleware/auth.middleware';
 
 const router = Router();
 
-router.use(protect);\n\nrouter.get('/:disputeId', disputeController.getDispute);
+router.use(protect);
 
-// A homeowner creates a dispute against a milestone
+router.get('/:disputeId', disputeController.getDispute);
 router.post('/milestones/:milestoneId', disputeController.createDispute);
-
-// An admin resolves a dispute
 router.patch('/:disputeId/resolve', disputeController.resolveDispute);
 
 export default router;
-

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Role, SubscriptionTier } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { listPlans, subscribe, getBillingSummary } from '../services/billing.service';
 import prisma from '../lib/prisma';
 
@@ -23,7 +23,7 @@ export const subscribeToPlan = async (req: Request, res: Response) => {
     const result = await subscribe(
       user.id,
       {
-        plan: plan as SubscriptionTier.PRO | SubscriptionTier.VERIFIED,
+        plan: plan as 'PRO' | 'VERIFIED',
         paymentMethodId,
         successUrl,
         cancelUrl,

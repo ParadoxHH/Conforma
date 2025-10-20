@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { protect } from '../middleware/auth.middleware';
-import { triggerInstantPayout, listMyPayouts, getJobFeeBreakdown } from '../controllers/payout.controller';
+import { triggerInstantPayout, listMyPayouts } from '../controllers/payout.controller';
 
 const router = Router({ mergeParams: true });
 

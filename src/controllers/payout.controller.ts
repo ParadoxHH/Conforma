@@ -40,18 +40,3 @@ export const listMyPayouts = async (req: Request, res: Response) => {
     res.status(400).json({ message: error.message });
   }
 };
-
-export const getJobFeeBreakdown = async (req: Request, res: Response) => {
-  const { user } = req as Request & { user?: { id?: string; role?: Role } };
-
-  if (!user?.id || !user.role) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-
-  try {
-    const breakdown = await getJobFees(req.params.id, user.id, user.role, prisma);
-    res.status(200).json(breakdown);
-  } catch (error: any) {
-    res.status(403).json({ message: error.message });
-  }
-};

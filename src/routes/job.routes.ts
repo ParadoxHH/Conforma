@@ -62,6 +62,30 @@ router.get('/', jobController.getJobs);
 
 /**
  * @openapi
+ * /api/jobs/{id}/fund:
+ *   post:
+ *     summary: Attempt to fund a job after risk checks
+ *     tags: [Jobs]
+     security:
+       - bearerAuth: []
+     parameters:
+       - in: path
+         name: id
+         required: true
+         schema:
+           type: string
+     responses:
+       200:
+         description: Funding allowed
+       202:
+         description: Funding flagged for manual review
+       409:
+         description: Funding blocked due to risk assessment
+ */
+router.post('/:id/fund', jobController.fundJob);
+
+/**
+ * @openapi
  * /api/jobs/{id}/state:
  *   put:
  *     summary: Admin override job state configuration

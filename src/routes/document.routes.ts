@@ -9,5 +9,6 @@ router.use(protect);
 router.post('/upload-url', documentController.requestUploadUrl);
 router.post('/', documentController.createDocument);
 router.get('/', documentController.listMyDocuments);
+router.get('/me', documentController.listMyDocuments);
 
 export default router;
