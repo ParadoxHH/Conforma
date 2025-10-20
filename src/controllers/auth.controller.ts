@@ -3,6 +3,7 @@ import * as argon2 from 'argon2';
 import * as jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import * as authService from '../services/auth.service';
+import { notify } from '../lib/email/notifier';
 import prisma from '../lib/prisma';
 
 const registerSchema = z.object({
@@ -20,6 +21,10 @@ export const register = async (req: Request, res: Response) => {
   try {
     const payload = registerSchema.parse(req.body);
     const user = await authService.register(payload, prisma, argon2);
+    const event = user.role === 'CONTRACTOR' ? 'user_registered_contractor' : 'user_registered_homeowner';
+    notify(event, { to: user.email, name: user.email.split('@')[0] }).catch((error) => {
+      console.error('Failed to send registration email', error);
+    });
     res.status(201).json(user);
   } catch (error: any) {
     if (error instanceof z.ZodError) {
@@ -65,3 +70,5 @@ export const getMe = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error fetching user' });
   }
 };
+
+
