@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { Prisma, PrismaClient, Role } from '@prisma/client';
+import { Prisma, PrismaClient, Role, EvidenceFile } from '@prisma/client';
 import prismaClient from '../lib/prisma';
 import { getCdnBaseUrl, getUploadBaseUrl } from '../utils/uploads';
 
@@ -89,7 +89,7 @@ export const recordEvidence = async (
   userId: string,
   input: CreateEvidenceInput,
   prisma: PrismaClient = prismaClient,
-): Promise<{ evidence: Prisma.EvidenceFile; duplicate: boolean }> => {
+): Promise<{ evidence: EvidenceFile; duplicate: boolean }> => {
   const { milestone } = await ensureMilestoneAccess(prisma, input.milestoneId, userId);
 
   if (input.contentHash) {

@@ -8,12 +8,12 @@ export const startDocumentExpiryJob = () => {
     try {
       const expiredCount = await expireStaleDocuments();
       if (expiredCount > 0) {
-        logger.info(Document expiry job: marked  documents as expired);
+        logger.info(`Document expiry job: marked ${expiredCount} documents as expired`);
       }
-      recordCronRun('document_expiry', expired=);
+      recordCronRun('document_expiry', `expired=${expiredCount}`);
     } catch (error) {
       logger.error('Document expiry job failed', error);
-      recordCronRun('document_expiry', ailed: );
+      recordCronRun('document_expiry', `failed: ${(error as Error)?.message ?? 'unknown error'}`);
     }
   });
 };

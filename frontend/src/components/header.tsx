@@ -42,6 +42,22 @@ export function Header() {
               >
                 {t('common.actions.dashboard')}
               </Link>
+              {user.role === 'ADMIN' ? (
+                <>
+                  <Link
+                    href="/admin/risk"
+                    className="hidden text-sm font-medium text-slate-600 transition hover:text-primary lg:inline-flex"
+                  >
+                    Risk
+                  </Link>
+                  <Link
+                    href="/autonomy"
+                    className="hidden text-sm font-medium text-slate-600 transition hover:text-primary lg:inline-flex"
+                  >
+                    Autonomy
+                  </Link>
+                </>
+              ) : null}
               <NotificationBell />
               <Button type="button" variant="outline" size="sm" onClick={logout}>
                 {t('common.actions.logout')}

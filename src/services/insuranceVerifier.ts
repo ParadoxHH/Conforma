@@ -2,10 +2,11 @@ import axios from 'axios';
 import PQueue from 'p-queue';
 import Tesseract from 'tesseract.js';
 import { metrics, trace, SpanStatusCode } from '@opentelemetry/api';
-import { Prisma, PrismaClient, DocumentStatus, DocumentAiStatus, DocumentType, Role } from '@prisma/client';
+import { Prisma, PrismaClient, DocumentStatus, AIStatus, DocumentType, Role } from '@prisma/client';
 import prismaClient from '../lib/prisma';
 import { logger } from '../utils/logger';
 import * as notificationService from './notification.service';
+import { notify } from '../lib/email/notifier';
 import { getOpenAIClient, isAiConfigured, resolveOpenAiModel } from '../lib/openai';
 
 type VerificationOptions = {
@@ -35,7 +36,7 @@ type LlmExtraction = {
 } | null;
 
 type VerificationDecision = {
-  aiStatus: DocumentAiStatus;
+  aiStatus: AIStatus;
   status: DocumentStatus;
   confidence: number;
   reason: string;
@@ -94,7 +95,7 @@ export const initializeInsuranceVerifier = async (prisma: PrismaClient = prismaC
     const pendingDocs = await prisma.document.findMany({
       where: {
         status: DocumentStatus.PENDING,
-        aiStatus: { in: [DocumentAiStatus.NONE, DocumentAiStatus.NEEDS_REVIEW] },
+        aiStatus: { in: [AIStatus.NONE, AIStatus.NEEDS_REVIEW] },
       },
       select: { id: true },
     });
@@ -196,7 +197,7 @@ const verifyDocumentInternal = async (documentId: string, prisma: PrismaClient =
     await prisma.document.update({
       where: { id: documentId },
       data: {
-        aiStatus: DocumentAiStatus.NEEDS_REVIEW,
+        aiStatus: AIStatus.NEEDS_REVIEW,
         status: DocumentStatus.NEEDS_REVIEW,
         aiConfidence: new Prisma.Decimal('0.3'),
         aiReason: `Automated verification failed: ${(error as Error).message}`,
@@ -204,9 +205,10 @@ const verifyDocumentInternal = async (documentId: string, prisma: PrismaClient =
     });
   } finally {
     const elapsed = Date.now() - startedAt;
+    const decisionLabel = decisionSummary ? (decisionSummary as { status: string }).status : 'ERROR';
     verificationDuration.record(elapsed, {
       document_type: document.type,
-      decision: decisionSummary?.status ?? 'ERROR',
+      decision: decisionLabel,
     });
   }
 };
@@ -304,9 +306,13 @@ const rasterizePdfPage = async (page: any): Promise<Buffer | null> => {
 };
 
 const runTesseract = async (buffer: Buffer): Promise<string> => {
-  const { data } = await Tesseract.recognize(buffer, 'eng', {
-    tessjs_create_pdf: '0',
-  });
+  const { data } = await Tesseract.recognize(
+    buffer,
+    'eng',
+    {
+      tessjs_create_pdf: '0',
+    } as Record<string, string>,
+  );
   return data?.text?.replace(/\s+/g, ' ').trim() ?? '';
 };
 
@@ -509,7 +515,7 @@ const decideVerification = (type: DocumentType, fields: ParsedFields): Verificat
 
   if (fields.effectiveTo && fields.effectiveTo < now) {
     return {
-      aiStatus: DocumentAiStatus.REJECTED,
+      aiStatus: AIStatus.REJECTED,
       status: DocumentStatus.REJECTED,
       confidence,
       reason: `${reasons.join(' ')} Auto-rejected because coverage appears expired.`,
@@ -520,7 +526,7 @@ const decideVerification = (type: DocumentType, fields: ParsedFields): Verificat
   if (fields.policyNumber && fields.issuer && withinWindow) {
     const adjustedConfidence = Math.max(confidence, 0.82);
     return {
-      aiStatus: DocumentAiStatus.APPROVED,
+      aiStatus: AIStatus.APPROVED,
       status: adjustedConfidence >= 0.8 ? DocumentStatus.APPROVED : DocumentStatus.NEEDS_REVIEW,
       confidence: adjustedConfidence,
       reason: `${reasons.join(' ')} Auto-approved with confidence score ${adjustedConfidence.toFixed(2)}.`,
@@ -529,7 +535,7 @@ const decideVerification = (type: DocumentType, fields: ParsedFields): Verificat
   }
 
   return {
-    aiStatus: DocumentAiStatus.NEEDS_REVIEW,
+    aiStatus: AIStatus.NEEDS_REVIEW,
     status: DocumentStatus.NEEDS_REVIEW,
     confidence,
     reason: `${reasons.join(' ')} Flagged for manual review.`,
@@ -586,36 +592,35 @@ const persistDecision = async (
 };
 
 const notifyContractor = async (document: any, decision: VerificationDecision) => {
-  const statusLabel = decision.status;
-  const subjectMap: Record<DocumentStatus, string> = {
-    [DocumentStatus.APPROVED]: 'Conforma: Your document was automatically approved',
-    [DocumentStatus.NEEDS_REVIEW]: 'Conforma: Your document needs manual review',
-    [DocumentStatus.REJECTED]: 'Conforma: Your document was rejected',
-    [DocumentStatus.PENDING]: 'Conforma: Document pending review',
-    [DocumentStatus.EXPIRED]: 'Conforma: Your document has expired',
-  };
+  const recipient = document.user?.email;
 
-  const subject = subjectMap[statusLabel] ?? 'Conforma: Document update';
-  const baseMessage = [
-    `Document type: ${document.type}`,
-    `AI status: ${decision.aiStatus}`,
-    `Confidence: ${(decision.confidence * 100).toFixed(0)}%`,
-    `Details: ${decision.reason}`,
-    decision.fields.policyNumber ? `Policy/license number: ${decision.fields.policyNumber}` : null,
-    decision.fields.issuer ? `Issuer: ${decision.fields.issuer}` : null,
-    decision.fields.effectiveFrom ? `Effective from: ${decision.fields.effectiveFrom.toDateString()}` : null,
-    decision.fields.effectiveTo ? `Effective to: ${decision.fields.effectiveTo.toDateString()}` : null,
-  ]
-    .filter(Boolean)
-    .join('\n');
-
-  if (document.user?.email) {
-    notificationService.sendEmail(
-      document.user.email,
-      subject,
-      `${baseMessage}\n\nVisit your dashboard to view the decision details and next steps.`,
-      `<p>${baseMessage.replace(/\n/g, '<br />')}</p><p>Visit your dashboard to view the decision details and next steps.</p>`,
-    );
+  if (recipient) {
+    try {
+      if (decision.status === DocumentStatus.APPROVED) {
+        await notify('document_approved', {
+          to: recipient,
+          type: document.type,
+        });
+      } else if (decision.status === DocumentStatus.NEEDS_REVIEW) {
+        await notify('document_needs_review', {
+          to: recipient,
+          type: document.type,
+          reason: decision.reason,
+        });
+      } else if (decision.status === DocumentStatus.REJECTED) {
+        await notify('document_rejected', {
+          to: recipient,
+          type: document.type,
+          reason: decision.reason,
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to send document verification email', {
+        documentId: document.id,
+        status: decision.status,
+        error: (error as Error).message,
+      });
+    }
   }
 
   const notificationType =

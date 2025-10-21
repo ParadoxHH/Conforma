@@ -13,6 +13,19 @@ describe('Job Service', () => {
     };
     const contractorId = 'contractor1';
 
+    const mockStateRule = {
+      findUnique: vi.fn().mockResolvedValue({
+        code: 'TX',
+        name: 'Texas',
+        reviewWindowMidDays: 3,
+        reviewWindowFinalDays: 5,
+        platformFeeBps: 150,
+        kycRequired: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+    };
+
     const mockPrisma = {
       contractor: {
         findUnique: vi.fn().mockResolvedValue({
@@ -35,6 +48,7 @@ describe('Job Service', () => {
         create: vi.fn(),
         update: vi.fn(),
       },
+      stateRule: mockStateRule,
     } as unknown as PrismaClient;
 
     const mockEscrowService = { createTransaction: vi.fn().mockResolvedValue({ id: 'escrow123' }) };
@@ -75,6 +89,18 @@ describe('Job Service', () => {
       contractor: { findUnique: vi.fn() },
       homeowner: { findUnique: vi.fn() },
       job: { create: vi.fn(), update: vi.fn() },
+      stateRule: {
+        findUnique: vi.fn().mockResolvedValue({
+          code: 'TX',
+          name: 'Texas',
+          reviewWindowMidDays: 3,
+          reviewWindowFinalDays: 5,
+          platformFeeBps: 150,
+          kycRequired: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      },
     } as unknown as PrismaClient;
 
     await expect(jobService.createJob(jobData, contractorId, mockPrisma)).rejects.toThrow(

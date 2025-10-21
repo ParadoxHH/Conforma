@@ -4,7 +4,7 @@ import * as notificationService from './notification.service';
 import prismaClient from '../lib/prisma';
 import { calculateFees } from '../utils/fees';
 import { appConfig } from '../config/app.config';
-import { getStateRule } from '../config/state.config';
+import * as stateRuleService from './stateRule.service';
 
 type MilestoneInput = {
   title: string;
@@ -89,11 +89,8 @@ export const createJob = async (
     throw new Error(`State ${stateCode} is not currently supported.`);
   }
 
-  const stateRule = getStateRule(stateCode);
-  const cappedPlatformFeeBps =
-    stateRule.platformFeeCapBps !== null
-      ? Math.min(platformFeeBps, stateRule.platformFeeCapBps)
-      : platformFeeBps;
+  const stateRule = await stateRuleService.getStateRule(stateCode, prisma);
+  const cappedPlatformFeeBps = Math.min(platformFeeBps, stateRule.platformFeeBps);
   const feeBreakdown = calculateFees(totalPrice, { platformFeeBps: cappedPlatformFeeBps });
 
   const job = await prisma.job.create({
@@ -111,8 +108,8 @@ export const createJob = async (
         create: milestones.map((milestone, index) => {
           const isFinalMilestone = index === milestones.length - 1;
           const reviewDays = isFinalMilestone
-            ? stateRule.reviewWindows.finalMilestoneDays
-            : stateRule.reviewWindows.midMilestoneDays;
+            ? stateRule.reviewWindowFinalDays
+            : stateRule.reviewWindowMidDays;
           return {
             title: milestone.title,
             price: milestone.price,
@@ -176,11 +173,8 @@ export const refreshJobFees = async (jobId: string, stateCode: string, prisma: P
   }
 
   const basePlatformFeeBps = resolvePlatformFeeBps(appConfig.platformFeeBps, job.contractor.subscriptionTier);
-  const stateRule = getStateRule(stateCode);
-  const cappedPlatformFeeBps =
-    stateRule.platformFeeCapBps !== null
-      ? Math.min(basePlatformFeeBps, stateRule.platformFeeCapBps)
-      : basePlatformFeeBps;
+  const stateRule = await stateRuleService.getStateRule(stateCode, prisma);
+  const cappedPlatformFeeBps = Math.min(basePlatformFeeBps, stateRule.platformFeeBps);
   const feeBreakdown = calculateFees(job.totalPrice, { platformFeeBps: cappedPlatformFeeBps });
 
   return prisma.job.update({

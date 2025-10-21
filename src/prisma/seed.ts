@@ -7,7 +7,7 @@ import {
   InviteStatus,
   DocumentType,
   DocumentStatus,
-  DocumentAiStatus,
+  AIStatus,
   SubscriptionTier,
   SubscriptionStatus,
   PayoutType,
@@ -29,6 +29,43 @@ async function main() {
     `${prefix}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
   const adminReferralCode = generateReferralCode('ADMIN');
+
+  const stateRuleSeeds = [
+    {
+      code: 'TX',
+      name: 'Texas',
+      reviewWindowMidDays: 3,
+      reviewWindowFinalDays: 5,
+      platformFeeBps: 150,
+      kycRequired: false,
+    },
+    {
+      code: 'OK',
+      name: 'Oklahoma',
+      reviewWindowMidDays: 4,
+      reviewWindowFinalDays: 6,
+      platformFeeBps: 150,
+      kycRequired: false,
+    },
+    {
+      code: 'LA',
+      name: 'Louisiana',
+      reviewWindowMidDays: 5,
+      reviewWindowFinalDays: 7,
+      platformFeeBps: 160,
+      kycRequired: true,
+    },
+  ];
+
+  await Promise.all(
+    stateRuleSeeds.map(async ({ code, ...rest }) => {
+      await prisma.stateRule.upsert({
+        where: { code },
+        update: rest,
+        create: { code, ...rest },
+      });
+    }),
+  );
 
   // Create Admin
   const admin = await prisma.user.create({
@@ -68,6 +105,8 @@ async function main() {
       displayName: 'The Martinez Family',
       allowAlias: true,
       phoneNumber: '+15125551000',
+      approvalConsistency: new Prisma.Decimal('0.84'),
+      avgDecisionTimeMs: 36 * 60 * 60 * 1000, // 36 hours
     },
   });
   console.log('Created homeowner:', homeownerUser.email);
@@ -104,6 +143,10 @@ async function main() {
       subscriptionTier: SubscriptionTier.VERIFIED,
       subscriptionStatus: SubscriptionStatus.ACTIVE,
       instantPayoutEnabled: true,
+      completionRate: new Prisma.Decimal('0.92'),
+      avgApprovalTimeMs: 6 * 60 * 60 * 1000,
+      disputeRate: new Prisma.Decimal('0.03'),
+      verifiedDocsCount: 2,
       stripeCustomerId: 'cus_seed_verified',
       stripeSubscriptionId: 'sub_seed_verified',
       subscriptionRenewalAt: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
@@ -118,7 +161,7 @@ async function main() {
       type: DocumentType.LICENSE,
       url: 'https://documents.conforma.com/license.pdf',
       status: DocumentStatus.APPROVED,
-      aiStatus: DocumentAiStatus.APPROVED,
+      aiStatus: AIStatus.APPROVED,
       aiConfidence: new Prisma.Decimal('0.94'),
       aiReason: 'AI verified license number, issuer, and active dates.',
       issuer: 'Texas Department of Licensing and Regulation',
@@ -135,7 +178,7 @@ async function main() {
       type: DocumentType.INSURANCE,
       url: 'https://documents.conforma.com/insurance.pdf',
       status: DocumentStatus.NEEDS_REVIEW,
-      aiStatus: DocumentAiStatus.NEEDS_REVIEW,
+      aiStatus: AIStatus.NEEDS_REVIEW,
       aiConfidence: new Prisma.Decimal('0.58'),
       aiReason: 'Coverage limit missing; flagged for human review.',
       issuer: 'Lone Star General Insurance Co.',
@@ -151,7 +194,7 @@ async function main() {
       type: DocumentType.INSURANCE,
       url: 'https://documents.conforma.com/certificate.pdf',
       status: DocumentStatus.EXPIRED,
-      aiStatus: DocumentAiStatus.REJECTED,
+      aiStatus: AIStatus.REJECTED,
       aiConfidence: new Prisma.Decimal('0.31'),
       aiReason: 'Policy expired 15 days ago.',
       issuer: 'Lone Star General Insurance Co.',
@@ -322,6 +365,10 @@ async function main() {
     data: {
       ratingAvg: 5,
       ratingCount: 1,
+      completionRate: new Prisma.Decimal('0.95'),
+      avgApprovalTimeMs: 5 * 60 * 60 * 1000,
+      disputeRate: new Prisma.Decimal('0.015'),
+      verifiedDocsCount: 3,
     },
   });
 
@@ -368,6 +415,10 @@ async function main() {
       verifiedInsurance: true,
       ratingAvg: 4.5,
       ratingCount: 12,
+      completionRate: new Prisma.Decimal('0.88'),
+      avgApprovalTimeMs: 8 * 60 * 60 * 1000,
+      disputeRate: new Prisma.Decimal('0.06'),
+      verifiedDocsCount: 1,
       subscriptionTier: SubscriptionTier.PRO,
       subscriptionStatus: SubscriptionStatus.PAST_DUE,
       instantPayoutEnabled: false,
@@ -383,7 +434,7 @@ async function main() {
       type: DocumentType.CERT,
       url: 'https://documents.conforma.com/solar-nabcep.pdf',
       status: DocumentStatus.PENDING,
-      aiStatus: DocumentAiStatus.NONE,
+      aiStatus: AIStatus.NONE,
       aiConfidence: new Prisma.Decimal('0'),
       issuer: 'NABCEP',
       policyNumber: 'NABCEP-2245',

@@ -576,6 +576,42 @@ paths:
                 type: array
                 items:
                   $ref: ''#/components/schemas/StateRule''
+  /config/states/{code}:
+    put:
+      summary: Upsert state configuration rule
+      tags: [Config]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: code
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - reviewWindowMidDays
+                - reviewWindowFinalDays
+                - platformFeeBps
+                - kycRequired
+              properties:
+                name: { type: string }
+                reviewWindowMidDays: { type: integer, minimum: 1 }
+                reviewWindowFinalDays: { type: integer, minimum: 1 }
+                platformFeeBps: { type: integer, minimum: 0 }
+                kycRequired: { type: boolean }
+      responses:
+        ''200'':
+          description: Updated state rule
+          content:
+            application/json:
+              schema:
+                $ref: ''#/components/schemas/StateRule''
   /referrals/me:
     get:
       summary: Get referral summary for current user
@@ -869,13 +905,12 @@ components:
       properties:
         code: { type: string }
         name: { type: string }
-        reviewWindows:
-          type: object
-          properties:
-            midMilestoneDays: { type: integer }
-            finalMilestoneDays: { type: integer }
-        platformFeeCapBps: { type: integer, nullable: true }
-        kycRequirement: { type: string }
+        reviewWindowMidDays: { type: integer }
+        reviewWindowFinalDays: { type: integer }
+        platformFeeBps: { type: integer }
+        kycRequired: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
     ReferralSummary:
       type: object
       properties:

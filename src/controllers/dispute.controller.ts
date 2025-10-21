@@ -14,7 +14,7 @@ export const createDispute = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Only homeowners can create disputes.' });
     }
 
-    const dispute = await disputeService.createDispute(milestoneId, reason, userId, prisma, notificationService);
+    const dispute = await disputeService.createDispute(milestoneId, reason, userId, prisma);
     res.status(201).json(dispute);
   } catch (error: any) {
     if (error.message.includes('Unauthorized')) {

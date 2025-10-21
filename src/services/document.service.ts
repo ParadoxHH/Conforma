@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import {
-  DocumentAiStatus,
+  AIStatus,
   DocumentStatus,
   DocumentType,
   Prisma,
@@ -43,7 +43,7 @@ export async function createDocumentRecord(
       type,
       url: fileUrl,
       status: DocumentStatus.PENDING,
-      aiStatus: DocumentAiStatus.NONE,
+      aiStatus: AIStatus.NONE,
       aiReason: null,
     },
   });
@@ -168,7 +168,7 @@ export async function approveDocument(
     where: { id: documentId },
     data: {
       status: DocumentStatus.APPROVED,
-      aiStatus: DocumentAiStatus.APPROVED,
+      aiStatus: AIStatus.APPROVED,
       aiConfidence: new Prisma.Decimal(1),
       aiReason: `Manually approved by ${reviewerUserId} on ${new Date().toISOString()}`,
       notes: `Approved by ${reviewerUserId}`,
@@ -203,7 +203,7 @@ export async function rejectDocument(
     where: { id: documentId },
     data: {
       status: DocumentStatus.REJECTED,
-      aiStatus: DocumentAiStatus.REJECTED,
+      aiStatus: AIStatus.REJECTED,
       aiConfidence: new Prisma.Decimal(0.2),
       aiReason: `Rejected by ${reviewerUserId}`,
       notes,
@@ -252,7 +252,7 @@ export async function reviewDocumentStatus(
     notes: options.reason ?? null,
     aiReason:
       options.reason ?? `Status manually set to ${status} by ${reviewerUserId} at ${new Date().toISOString()}`,
-    aiStatus: status === DocumentStatus.EXPIRED ? DocumentAiStatus.REJECTED : DocumentAiStatus.NEEDS_REVIEW,
+    aiStatus: status === DocumentStatus.EXPIRED ? AIStatus.REJECTED : AIStatus.NEEDS_REVIEW,
     aiConfidence:
       status === DocumentStatus.EXPIRED
         ? new Prisma.Decimal(0.35)
@@ -297,7 +297,7 @@ export async function reverifyDocumentById(
     where: { id: documentId },
     data: {
       status: DocumentStatus.NEEDS_REVIEW,
-      aiStatus: DocumentAiStatus.NEEDS_REVIEW,
+      aiStatus: AIStatus.NEEDS_REVIEW,
       aiConfidence: new Prisma.Decimal(0),
       aiReason: `Reverification requested at ${new Date().toISOString()}`,
     },
@@ -328,7 +328,7 @@ export async function expireStaleDocuments(prisma: PrismaClient = prismaClient) 
       where: { id: document.id },
       data: {
         status: DocumentStatus.EXPIRED,
-        aiStatus: DocumentAiStatus.REJECTED,
+        aiStatus: AIStatus.REJECTED,
         aiReason: `Document expired on ${document.effectiveTo?.toISOString()}`,
         aiConfidence: new Prisma.Decimal(0.35),
         notes: 'Automatically marked expired by system check.',

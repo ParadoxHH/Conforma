@@ -1,7 +1,8 @@
 import { diag, DiagConsoleLogger, DiagLogLevel, metrics } from '@opentelemetry/api';
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import type { Request, Response } from 'express';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
@@ -26,15 +27,17 @@ const traceExporter = new OTLPTraceExporter({
 
 const prometheusExporter = new PrometheusExporter({
   port: Number(process.env.METRICS_PORT ?? 9464),
-  startServer: false,
+  preventServerStart: true,
+});
+
+const resource = resourceFromAttributes({
+  [SemanticResourceAttributes.SERVICE_NAME]: process.env.OTEL_SERVICE_NAME ?? 'conforma-api',
+  [SemanticResourceAttributes.SERVICE_NAMESPACE]: 'conforma',
+  [SemanticResourceAttributes.SERVICE_VERSION]: 'phase5',
 });
 
 const sdk = new NodeSDK({
-  resource: new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: process.env.OTEL_SERVICE_NAME ?? 'conforma-api',
-    [SemanticResourceAttributes.SERVICE_NAMESPACE]: 'conforma',
-    [SemanticResourceAttributes.SERVICE_VERSION]: 'phase5',
-  }),
+  resource,
   traceExporter,
   metricReader: prometheusExporter,
   instrumentations: [
@@ -66,6 +69,7 @@ export const shutdownTelemetry = async () => {
   initialized = false;
 };
 
-export const prometheusRequestHandler = prometheusExporter.getMetricsRequestHandler();
+export const prometheusRequestHandler = (req: Request, res: Response) =>
+  prometheusExporter.getMetricsRequestHandler(req, res);
 
 export const telemetryMeter = metrics.getMeter('conforma-meter');

@@ -1,4 +1,4 @@
-﻿# Conforma - Escrow for Texas Home Services
+# Conforma - Escrow for Texas Home Services
 
 Conforma is a web application that allows homeowners to securely fund home-service projects via Escrow.com. Contractors get paid only when milestones are approved by the homeowner.
 
@@ -35,8 +35,9 @@ This repository contains the full monorepo for the Conforma application, includi
 
 ## Phase 5 Highlights
 
-* **AI verification pipeline:** Insurance and license uploads are OCR’d with Tesseract, parsed with local Ollama (or OpenAI fallback), auto-approved when confidence ≥ 0.8, and surfaced with admin audit drawers. Admins can reverify, override statuses, and adjust expirations from `/admin/verification`.
-* **Risk scoring engine:** `/api/jobs/:id/fund` now runs deterministic risk checks (disposable emails, rapid funding, unsafe states, disputes, trade caps) persisting to `risk_events`. Configurable thresholds and trade caps live under `/api/admin/risk/config`.
+* **AI verification pipeline:** Insurance and license uploads are OCR'd with Tesseract, parsed with local Ollama (or OpenAI fallback), auto-approved when confidence >= 0.8, and surfaced with admin audit drawers. Admins can reverify, override statuses, and adjust expirations from `/admin/verification`.
+* **Risk controls console:** `/api/jobs/:id/fund` now runs deterministic risk checks (disposable emails, rapid funding, unsafe states, disputes, trade caps) persisting to `risk_events`. Thresholds and trade caps are editable from the `/admin/risk` console, backed by persisted `state_rule` rows.
+* **Autonomy health + cron monitor:** `/autonomy/health` summarizes feature flags and the last execution of document expiry, invite expiry, weekly digest, and backup jobs—mirrored in the `/autonomy` frontend route. The floating help drawer now links directly to verification, risk, and autonomy admin tooling.
 * **Observability stack:** OpenTelemetry traces + Prometheus metrics are exposed at `/metrics` and `/ops/docker-compose.yml` spins up Prometheus/Grafana dashboards (latency/error rate, verification turnaround, payout SLO). Alerts can be defined directly inside Grafana.
 * **Offline evidence capture:** Contractors can capture milestone evidence at `/capture`, queue media in IndexedDB, and background-sync via service worker + `BackgroundSync`. Duplicates are eliminated server-side with content hashes.
 ## Getting Started
@@ -136,6 +137,13 @@ The backend is configured for deployment on **Render**, and the frontend is conf
 | `OCR_CONCURRENCY` | Number of parallel OCR workers used during document verification (default `2`). |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP gRPC collector endpoint for traces (default `http://localhost:4317`). |
 | `METRICS_PORT` | Port exposed by the embedded Prometheus exporter (default `9464`). |
+| `AUTONOMY_ENABLED` | Master switch for autonomy jobs/features (`true`/`false`, default `true`). |
+| `EMAILS_ENABLED` | Toggle transactional emails (`true`/`false`, default `true`). |
+| `AI_DOC_VERIFY_ENABLED` | Enable AI-driven document verification queue (`true`/`false`, default `true`). |
+| `RISK_RULES_ENABLED` | Enable automated risk scoring during funding (`true`/`false`, default `true`). |
+| `OBSERVABILITY_ENABLED` | Enable OpenTelemetry & Prometheus exporters (`true`/`false`, default `true`). |
+| `WEEKLY_DIGEST_ENABLED` | Enable the weekly founder digest cron (`true`/`false`, default `true`). |
+| `FOUNDER_ALERT_EMAIL` | Founder / operator email that receives digests and critical risk alerts. |
 | `INSTANT_PAYOUT_ENABLED` | Toggle instant payout feature (`true`/`false`). |
 | `INSTANT_PAYOUT_FEE_BPS` | Instant payout fee tier in basis points (e.g., `100`). |
 | `AI_TRIAGE_ENABLED` | Enable AI dispute triage (`true`/`false`). |

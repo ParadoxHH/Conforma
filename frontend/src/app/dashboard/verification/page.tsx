@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -12,7 +12,7 @@ import { BadgeRow } from '@/components/badge-row';
 
 type DocumentRecord = {
   id: string;
-  type: 'LICENSE' | 'INSURANCE' | 'CERT' | 'OTHER';
+  type: 'LICENSE' | 'INSURANCE' | 'CERT';
   url: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_REVIEW' | 'EXPIRED';
   aiStatus: 'NONE' | 'APPROVED' | 'REJECTED' | 'NEEDS_REVIEW';
@@ -70,10 +70,10 @@ const aiStatusBadgeClass = (status: DocumentRecord['aiStatus']) => {
 
 const formatDateLabel = (value?: string | null) => {
   if (!value) {
-    return '—';
+    return 'Unknown';
   }
   const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString();
+  return Number.isNaN(parsed.getTime()) ? 'Unknown' : parsed.toLocaleDateString();
 };
 
 const expiresSoon = (value?: string | null, days = 30) => {
@@ -98,7 +98,7 @@ const fetchProfileSummary = () =>
   }));
 
 export default function VerificationPage() {
-  const [selectedType, setSelectedType] = useState<'LICENSE' | 'INSURANCE' | 'CERT' | 'OTHER'>('LICENSE');
+  const [selectedType, setSelectedType] = useState<'LICENSE' | 'INSURANCE' | 'CERT'>('LICENSE');
   const [fileUrl, setFileUrl] = useState('');
   const [uploadHint, setUploadHint] = useState<UploadUrlResponse | null>(null);
 
@@ -183,7 +183,6 @@ export default function VerificationPage() {
                 <SelectItem value="LICENSE">License</SelectItem>
                 <SelectItem value="INSURANCE">Insurance</SelectItem>
                 <SelectItem value="CERT">Certificate</SelectItem>
-                <SelectItem value="OTHER">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -236,7 +235,7 @@ export default function VerificationPage() {
             documents.map((doc) => {
               const confidenceLabel = Number.isFinite(doc.aiConfidence)
                 ? `${Math.round(doc.aiConfidence * 100)}%`
-                : '—';
+                : 'â€”';
               const approachingExpiry = expiresSoon(doc.effectiveTo);
 
               return (
@@ -309,4 +308,6 @@ export default function VerificationPage() {
     </div>
   );
 }
+
+
 

@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils';
 
 type AdminDocument = {
   id: string;
-  type: 'LICENSE' | 'INSURANCE' | 'CERT' | 'OTHER';
+  type: 'LICENSE' | 'INSURANCE' | 'CERT';
   url: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_REVIEW' | 'EXPIRED';
   aiStatus: 'NONE' | 'APPROVED' | 'REJECTED' | 'NEEDS_REVIEW';
@@ -93,7 +93,7 @@ const aiStatusBadgeClass = (status: AdminDocument['aiStatus']) => {
 
 const formatDateLabel = (value?: string | null) => {
   if (!value) {
-    return '—';
+    return 'Unknown';
   }
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString();
@@ -101,7 +101,7 @@ const formatDateLabel = (value?: string | null) => {
 
 const confidenceLabel = (value: number) => {
   if (!Number.isFinite(value)) {
-    return '—';
+    return 'Unknown';
   }
   const clamped = Math.max(0, Math.min(1, value));
   return `${Math.round(clamped * 100)}%`;

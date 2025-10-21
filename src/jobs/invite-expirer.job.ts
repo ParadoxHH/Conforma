@@ -8,12 +8,12 @@ export const startInviteExpiryJob = () => {
     try {
       const expiredCount = await inviteService.expireStaleInvites();
       if (expiredCount > 0) {
-        logger.info(Invite expiry job: expired  invites);
+        logger.info(`Invite expiry job: expired ${expiredCount} invites`);
       }
-      recordCronRun('invite_expiry', expired=);
+      recordCronRun('invite_expiry', `expired=${expiredCount}`);
     } catch (error) {
       logger.error('Invite expiry job failed', error);
-      recordCronRun('invite_expiry', ailed: );
+      recordCronRun('invite_expiry', `failed: ${(error as Error)?.message ?? 'unknown error'}`);
     }
   });
 };

@@ -48,6 +48,10 @@ model Contractor {
   verifiedInsurance Boolean @default(false)
   ratingAvg       Decimal  @default(0) @db.Decimal(4, 2)
   ratingCount     Int      @default(0)
+  completionRate        Decimal   @default(0) @db.Decimal(5, 4)
+  avgApprovalTimeMs     Int       @default(0)
+  disputeRate           Decimal   @default(0) @db.Decimal(5, 4)
+  verifiedDocsCount     Int       @default(0)
   jobs            Job[]
   reviews         Review[]
   subscriptionTier   SubscriptionTier   @default(FREE)
@@ -73,6 +77,8 @@ model Homeowner {
   phoneNumber     String?
   displayName     String?
   allowAlias      Boolean  @default(true)
+  approvalConsistency  Decimal @default(0) @db.Decimal(5, 4)
+  avgDecisionTimeMs    Int     @default(0)
   jobs            Job[]
   reviews         Review[]
 }
@@ -217,13 +223,13 @@ model Invite {
 }
 
 model Document {
-  id            String            @id @default(cuid())
+  id            String            @id @default(uuid())
   user          User              @relation(fields: [userId], references: [id])
   userId        String
   type          DocumentType
   url           String
   status        DocumentStatus    @default(PENDING)
-  aiStatus      DocumentAiStatus  @default(NONE)
+  aiStatus      AIStatus  @default(NONE)
   aiConfidence  Decimal           @default(0) @db.Decimal(5, 4)
   aiReason      String?
   issuer        String?
@@ -237,6 +243,7 @@ model Document {
   @@index([status], map: "document_status_idx")
   @@index([aiStatus], map: "document_ai_status_idx")
   @@index([userId, type], map: "document_user_type_idx")
+  @@index([userId, status], map: "document_user_status_idx")
 }
 
 model RiskEvent {
@@ -251,12 +258,23 @@ model RiskEvent {
 }
 
 model RiskConfig {
-  id                  Int    @id
+  id                  Int    @id @default(1)
   allowThreshold      Int    @default(25)
   blockThreshold      Int    @default(50)
   maxJobAmountByTrade Json?
   updatedAt           DateTime @updatedAt @db.Timestamptz(6)
   createdAt           DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model StateRule {
+  code                   String   @id @db.Char(2)
+  name                   String
+  reviewWindowMidDays    Int      @default(3)
+  reviewWindowFinalDays  Int      @default(5)
+  platformFeeBps         Int      @default(150)
+  kycRequired            Boolean  @default(false)
+  createdAt              DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt              DateTime @updatedAt @db.Timestamptz(6)
 }
 
 model Payout {
@@ -359,7 +377,6 @@ enum DocumentType {
   LICENSE
   INSURANCE
   CERT
-  OTHER
 }
 
 enum DocumentStatus {
@@ -370,7 +387,7 @@ enum DocumentStatus {
   EXPIRED
 }
 
-enum DocumentAiStatus {
+enum AIStatus {
   NONE
   APPROVED
   REJECTED
@@ -419,3 +436,4 @@ enum ReferralEventType {
   FIRST_FUNDED_JOB
   CREDIT_REDEEMED
 }
+

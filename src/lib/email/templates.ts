@@ -81,7 +81,7 @@ const createTemplate = <T>(
 
 export const emailTemplates: { [K in EmailEvent]: (data: TemplateDataMap[K]) => EmailPayload } = {
   user_registered_contractor: createTemplate(
-    'Welcome to Conforma — complete verification',
+    'Welcome to Conforma - complete verification',
     ({ name }) => `
       <p>Hi ${name ?? 'there'},</p>
       <p>Welcome to Conforma. Upload your license and insurance so homeowners can trust your milestones.</p>
@@ -89,7 +89,7 @@ export const emailTemplates: { [K in EmailEvent]: (data: TemplateDataMap[K]) => 
     `,
   ),
   user_registered_homeowner: createTemplate(
-    'Welcome to Conforma — start your first project',
+    'Welcome to Conforma - start your first project',
     ({ name }) => `
       <p>Hi ${name ?? 'there'},</p>
       <p>Create your first project, invite your contractor, and keep funds safe in escrow until work is approved.</p>
@@ -167,7 +167,7 @@ export const emailTemplates: { [K in EmailEvent]: (data: TemplateDataMap[K]) => 
     `,
   ),
   document_rejected: createTemplate(
-    'Document rejected — action required',
+    'Document rejected - action required',
     ({ type, reason }) => `
       <p>Your ${type.toLowerCase()} document was rejected.</p>
       ${reason ? `<p>Reason: ${reason}</p>` : ''}
@@ -207,14 +207,14 @@ export const emailTemplates: { [K in EmailEvent]: (data: TemplateDataMap[K]) => 
     'Weekly autonomy digest',
     ({ windowStart, windowEnd, metrics }) => {
       const lines = [
-        `Digest window: ${windowStart.toISOString()} → ${windowEnd.toISOString()}`,
+        `Digest window: ${windowStart.toISOString()} -> ${windowEnd.toISOString()}`,
         '',
-        `• New signups: ${metrics.newSignups}`,
-        `• Funded jobs: ${metrics.fundedJobs}`,
-        `• Avg payout latency: ${metrics.avgPayoutLatencyHours.toFixed(2)} hours`,
-        `• Disputes opened/resolved: ${metrics.disputesOpened}/${metrics.disputesResolved}`,
-        `• Verification approvals: ${metrics.verificationApprovals}`,
-        `• Risk flags: ${metrics.riskFlags}`,
+        `- New signups: ${metrics.newSignups}`,
+        `- Funded jobs: ${metrics.fundedJobs}`,
+        `- Avg payout latency: ${metrics.avgPayoutLatencyHours.toFixed(2)} hours`,
+        `- Disputes opened/resolved: ${metrics.disputesOpened}/${metrics.disputesResolved}`,
+        `- Verification approvals: ${metrics.verificationApprovals}`,
+        `- Risk flags: ${metrics.riskFlags}`,
       ].join('\n');
       return `<p>${lines.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br />')}</p><p>See /api/autonomy/health for cron status.</p>`;
     },
@@ -228,7 +228,7 @@ export const emailTemplates: { [K in EmailEvent]: (data: TemplateDataMap[K]) => 
     `,
   ),
   funding_blocked_alert: createTemplate(
-    'Funding blocked — manual action required',
+    'Funding blocked - manual action required',
     ({ jobTitle, reasons, score }) => `
       <p>Funding for "${jobTitle}" was blocked automatically.</p>
       <p>Risk score: ${score}</p>

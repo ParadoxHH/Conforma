@@ -2,7 +2,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockDeep, DeepMockProxy } from 'vitest-mock-extended';
 import { PrismaClient, Role } from '@prisma/client';
 
-import { evaluateJobFundingRisk } from '../src/services/risk.service';
+import { evaluateJobFundingRisk, notifyRiskDecision } from '../src/services/risk.service';
+import * as notificationService from '../src/services/notification.service';
+import { notify } from '../src/lib/email/notifier';
+
+vi.mock('../src/services/notification.service', () => ({
+  createInAppNotification: vi.fn(),
+  sendEmail: vi.fn(),
+}));
+
+vi.mock('../src/lib/email/notifier', () => ({
+  notify: vi.fn(),
+}));
 
 describe('risk.service', () => {
   let prisma: DeepMockProxy<PrismaClient>;
@@ -22,6 +33,10 @@ describe('risk.service', () => {
       user: { id: 'contractor-user', role: Role.CONTRACTOR },
     },
   };
+
+  const notifyMock = vi.mocked(notify);
+  const createNotificationMock = vi.mocked(notificationService.createInAppNotification);
+  const sendEmailMock = vi.mocked(notificationService.sendEmail);
 
   beforeEach(() => {
     prisma = mockDeep<PrismaClient>();
@@ -83,5 +98,71 @@ describe('risk.service', () => {
     expect(evaluation.decision).toBe('ALLOW');
     expect(evaluation.score).toBeLessThan(25);
     expect(prisma.riskEvent.create).toHaveBeenCalled();
+  });
+
+  it('notifies admins and founders when risk evaluation blocks funding', async () => {
+    prisma.user.findMany.mockResolvedValue([
+      { id: 'admin-1', email: 'admin@conforma.com' } as any,
+      { id: 'admin-2', email: null } as any,
+    ]);
+
+    notifyMock.mockResolvedValue();
+    createNotificationMock.mockResolvedValue({} as any);
+    sendEmailMock.mockResolvedValue();
+
+    const evaluation: any = {
+      job: {
+        id: 'job-risky',
+        title: 'High Voltage Upgrade',
+        homeowner: { user: { email: 'homeowner@test.com' } },
+        contractor: { user: { email: 'contractor@test.com' } },
+      },
+      score: 65,
+      reasons: ['DISPOSABLE_HOMEOWNER_EMAIL', 'JOB_AMOUNT_ABOVE_TRADE_CAP'],
+      decision: 'BLOCK',
+      thresholds: { allow: 25, block: 50 },
+      config: {},
+    };
+
+    process.env.FOUNDER_ALERT_EMAIL = 'founder@conforma.com';
+
+    await notifyRiskDecision(evaluation, prisma);
+
+    expect(prisma.user.findMany).toHaveBeenCalledWith({
+      where: { role: Role.ADMIN },
+      select: { id: true, email: true },
+    });
+    expect(createNotificationMock).toHaveBeenCalledWith('admin-1', 'RISK_EVENT_REVIEW', expect.objectContaining({
+      jobId: 'job-risky',
+      score: 65,
+      decision: 'BLOCK',
+    }));
+    expect(sendEmailMock).toHaveBeenCalledWith(
+      'homeowner@test.com',
+      expect.stringContaining('Funding blocked'),
+      expect.any(String),
+      expect.any(String),
+    );
+    expect(sendEmailMock).toHaveBeenCalledWith(
+      'contractor@test.com',
+      expect.stringContaining('Funding blocked'),
+      expect.any(String),
+      expect.any(String),
+    );
+
+    expect(notifyMock).toHaveBeenCalledWith('funding_blocked_alert', expect.objectContaining({
+      to: 'admin@conforma.com',
+      jobTitle: 'High Voltage Upgrade',
+      score: 65,
+      reasons: evaluation.reasons,
+    }));
+    expect(notifyMock).toHaveBeenCalledWith('funding_blocked_alert', expect.objectContaining({
+      to: 'founder@conforma.com',
+      jobTitle: 'High Voltage Upgrade',
+      score: 65,
+      reasons: evaluation.reasons,
+    }));
+
+    delete process.env.FOUNDER_ALERT_EMAIL;
   });
 });

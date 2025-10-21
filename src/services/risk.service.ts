@@ -3,6 +3,7 @@ import { Prisma, PrismaClient, Role } from '@prisma/client';
 import prismaClient from '../lib/prisma';
 import { appConfig } from '../config/app.config';
 import * as notificationService from './notification.service';
+import { notify } from '../lib/email/notifier';
 
 type RiskDecision = 'ALLOW' | 'FLAG' | 'BLOCK';
 
@@ -162,6 +163,9 @@ export const notifyRiskDecision = async (
     select: { id: true, email: true },
   });
 
+  const alertEvent = evaluation.decision === 'BLOCK' ? 'funding_blocked_alert' : 'risk_review_required';
+  const alertReasons = evaluation.reasons.length > 0 ? evaluation.reasons : ['UNSPECIFIED'];
+
   for (const admin of admins) {
     await notificationService.createInAppNotification(admin.id, 'RISK_EVENT_REVIEW', {
       jobId: evaluation.job.id,
@@ -172,13 +176,23 @@ export const notifyRiskDecision = async (
     });
 
     if (admin.email) {
-      notificationService.sendEmail(
-        admin.email,
-        `Risk ${evaluation.decision} for job ${jobTitle}`,
-        `Job ${jobTitle} (${evaluation.job.id}) scored ${evaluation.score}.\nTriggers: ${reasonSummary}.`,
-        `<p>Job <strong>${jobTitle}</strong> (${evaluation.job.id}) scored ${evaluation.score}.</p><p>Triggers: ${reasonSummary}.</p>`,
-      );
+      await notify(alertEvent, {
+        to: admin.email,
+        jobTitle,
+        reasons: alertReasons,
+        score: evaluation.score,
+      });
     }
+  }
+
+  const founderEmail = process.env.FOUNDER_ALERT_EMAIL;
+  if (founderEmail) {
+    await notify(alertEvent, {
+      to: founderEmail,
+      jobTitle,
+      reasons: alertReasons,
+      score: evaluation.score,
+    });
   }
 };
 
