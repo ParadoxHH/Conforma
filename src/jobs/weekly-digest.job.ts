@@ -1,5 +1,4 @@
 import cron from 'node-cron';
-import { JobStatus, PayoutStatus } from '@prisma/client';
 import { PrismaClient, JobStatus, PayoutStatus } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { autonomyConfig } from '../config/autonomy';
